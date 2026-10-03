@@ -10,7 +10,18 @@ export type GalleryImage = { src: string; blur?: string | null };
  * Ürün görselleri: ablanın paylaştığı görsel + (varsa) mağazanın ürün fotoğrafı.
  * Birden fazla görselde parmakla kaydırılır.
  */
-export function Gallery({ images, alt, aspect }: { images: GalleryImage[]; alt: string; aspect: number }) {
+export function Gallery({
+  images,
+  alt,
+  aspect,
+  href,
+}: {
+  images: GalleryImage[];
+  alt: string;
+  aspect: number;
+  /** Fotoğrafa dokununca gidilecek adres (/go/:id → mağaza). */
+  href: string;
+}) {
   const [index, setIndex] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   if (images.length === 0) return <div className="w-full bg-paper-2" style={{ aspectRatio: aspect }} />;
@@ -27,9 +38,12 @@ export function Gallery({ images, alt, aspect }: { images: GalleryImage[]; alt: 
         className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto"
       >
         {images.map((img, i) => (
-          <div
+          <a
             key={img.src}
-            className="relative max-h-[72svh] w-full shrink-0 snap-center overflow-hidden bg-paper-2 sm:rounded-2xl"
+            href={href}
+            rel="sponsored nofollow"
+            aria-label={`${alt} — ürünü aç`}
+            className="relative block w-full shrink-0 snap-center overflow-hidden bg-paper-2 sm:rounded-2xl"
             style={{ aspectRatio: aspect }}
           >
             <ProductImage
@@ -40,7 +54,7 @@ export function Gallery({ images, alt, aspect }: { images: GalleryImage[]; alt: 
               blurDataURL={img.blur}
               fit={i === 0 ? "cover" : "contain"}
             />
-          </div>
+          </a>
         ))}
       </div>
       {images.length > 1 ? (

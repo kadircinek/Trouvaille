@@ -7,10 +7,11 @@ Instagram hikâyelerinde paylaşılan Trendyol ve Hepsiburada affiliate linkleri
 ## Faz 1 (MVP) — bu sürümde olanlar
 
 **Ziyaretçi tarafı**
-- Instagram tarzı 2 sütunlu 4:5 görsel akış, sonsuz kaydırma, sabitlenen ürünler en üstte
+- Instagram hikâyesi oranında (9:16) 2 sütunlu görsel akış, sonsuz kaydırma, sabitlenen ürünler en üstte; hikâyedeki yazılar ve ürün kesiti kırpılmaz
+- **Fotoğrafa dokunmak doğrudan Trendyol/Hepsiburada'yı açar** (tıklama `/go` ile kaydedilir); ürün adına dokunmak detayı açar
 - "Hikâyede yeni" şeridi (son 48 saat, "Yeni" rozeti)
 - Kategori (Giyim, Ayakkabı, Çanta & Aksesuar, Kozmetik & Bakım, Ev) ve mağaza filtresi; filtreli link paylaşılabilir (`/?kategori=giyim`)
-- Ürün detayı: ablanın görseli (+ varsa mağazanın ürün fotoğrafı, kaydırmalı), kısa not, altta sabit "Ürüne Git" butonu. Akıştan açıldığında üstte katman olarak açılır; geri dönünce kaydırma konumu korunur
+- Ürün detayı: ablanın hikâye görseli tam boy (+ varsa mağazanın ürün fotoğrafı, kaydırmalı), kısa not, altta sabit "Ürüne Git" butonu; fotoğrafa dokunmak da mağazayı açar. Akıştan açıldığında üstte katman olarak açılır; geri dönünce kaydırma konumu korunur
 - Her ürünün kendi adresi (`/p/...`) ve WhatsApp/Instagram önizlemesi (Open Graph)
 - Her kartta ve detayda kapatılamayan **"#Reklam · [Mağaza] ortaklık linki"** etiketi; hediye ürünlerde "@Marka tarafından hediye olarak alındı"; sayfanın üstünde ve altında affiliate bilgi notu
 - Gizlilik ve Aydınlatma Metni (`/gizlilik`)
@@ -122,7 +123,7 @@ Sonraki her `git push` Vercel'de otomatik yayınlanır.
 ## 6. Günlük kullanım (ablan için)
 
 1. Hikâyeyi paylaşırken panelde **+**'ya dokun.
-2. **Fotoğraf seç** — hikâyede kullandığın görselin aynısı.
+2. **Fotoğraf seç** — hikâyede paylaştığın görselin aynısı (yazıları ve ürün kesitiyle birlikte; vitrinde hikâye oranında görünür).
 3. Trendyol/Hepsiburada linkini **Yapıştır** — mağaza ve ürün adı kendiliğinden dolar (gelmezse adı sen yaz).
 4. İstersen kategori seç, kısa bir not yaz; marka hediyesiyse **Marka hediyesi**'ni işaretleyip markayı yaz.
 5. **Yayınla** — ürün hemen vitrinde.

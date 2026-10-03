@@ -10,12 +10,12 @@ import { getCategory } from "@/lib/categories";
 import { storeName } from "@/lib/stores";
 import type { PublicProduct } from "@/lib/types";
 
-/** Detaydaki görsel oranı: yüklenen görselin kendi oranı (9:16 hikâye görseli en fazla 3:5'e kırpılır). */
+/** Detaydaki görsel oranı: yüklenen görselin kendi oranı; hikâye görseli (9:16) tam boy gösterilir. */
 function galleryAspect(product: PublicProduct): number {
   if (product.image_url && product.image_width && product.image_height) {
-    return Math.min(1, Math.max(0.6, product.image_width / product.image_height));
+    return Math.min(1, Math.max(9 / 16, product.image_width / product.image_height));
   }
-  return 4 / 5;
+  return 9 / 16;
 }
 
 function galleryImages(product: PublicProduct): GalleryImage[] {
@@ -42,7 +42,12 @@ export function ProductDetail({ product, related, backButton }: Props) {
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
       <article className="flex-1">
         <div className="relative sm:px-4 sm:pt-4">
-          <Gallery images={galleryImages(product)} alt={product.title} aspect={galleryAspect(product)} />
+          <Gallery
+            images={galleryImages(product)}
+            alt={product.title}
+            aspect={galleryAspect(product)}
+            href={`/go/${product.id}`}
+          />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 pt-[max(env(safe-area-inset-top),0.75rem)] sm:p-7">
             {backButton}
             <ShareButton path={`/p/${product.slug}`} title={product.title} />

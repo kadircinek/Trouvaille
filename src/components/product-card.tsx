@@ -2,16 +2,28 @@ import Link from "next/link";
 import { AdLabel } from "@/components/ad-label";
 import { PinIcon } from "@/components/icons";
 import { ProductImage } from "@/components/product-image";
+import { storeName } from "@/lib/stores";
 import { primaryImage, type PublicProduct } from "@/lib/types";
 
 // 390 px ekranda iki sütun ≈ 180 px; masaüstünde en fazla dört sütun.
 export const GRID_IMAGE_SIZES = "(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw";
 
+/**
+ * Vitrin kartı. Görseller Instagram hikâyesi oranında (9:16) gösterilir; hikâyedeki
+ * yazılar ve ürün kesiti kırpılmaz.
+ * - Fotoğrafa dokunmak doğrudan mağazayı açar (/go/:id → tıklama kaydı + 302).
+ * - Ürün adına dokunmak detayı açar (not, paylaşım).
+ */
 export function ProductCard({ product, priority = false }: { product: PublicProduct; priority?: boolean }) {
   const image = primaryImage(product);
   return (
-    <Link href={`/p/${product.slug}`} className="group block focus-visible:outline-none">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-paper-2 ring-accent/60 group-focus-visible:ring-2">
+    <div className="group">
+      <a
+        href={`/go/${product.id}`}
+        rel="sponsored nofollow"
+        aria-label={`${product.title} — ${storeName(product.store)}’da aç`}
+        className="relative block aspect-[9/16] overflow-hidden rounded-xl bg-paper-2 ring-accent/60 outline-none focus-visible:ring-2"
+      >
         {image ? (
           <ProductImage
             src={image}
@@ -28,15 +40,17 @@ export function ProductCard({ product, priority = false }: { product: PublicProd
             <span className="sr-only">Öne çıkan</span>
           </span>
         ) : null}
-      </div>
+      </a>
       <div className="px-0.5 pt-2 pb-1">
-        {product.brand ? (
-          <p className="truncate text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">{product.brand}</p>
-        ) : null}
-        <p className="line-clamp-2 text-[13px] leading-snug text-ink">{product.title}</p>
+        <Link href={`/p/${product.slug}`} className="block">
+          {product.brand ? (
+            <p className="truncate text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">{product.brand}</p>
+          ) : null}
+          <p className="line-clamp-2 text-[13px] leading-snug text-ink">{product.title}</p>
+        </Link>
         <AdLabel store={product.store} isGift={product.is_gift} giftBrand={product.gift_brand} className="mt-1.5" />
       </div>
-    </Link>
+    </div>
   );
 }
 

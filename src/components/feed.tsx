@@ -203,7 +203,7 @@ function GridSkeleton() {
     <ul className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
         <li key={i}>
-          <div className="aspect-[4/5] animate-pulse rounded-xl bg-paper-2" />
+          <div className="aspect-[9/16] animate-pulse rounded-xl bg-paper-2" />
           <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-paper-2" />
           <div className="mt-1.5 h-2.5 w-1/2 animate-pulse rounded bg-paper-2" />
         </li>

@@ -105,7 +105,7 @@ export default async function ClicksPage({ searchParams }: PageProps<"/admin/tik
             {period.top.map((p, i) => (
               <li key={p.id} className="flex items-center gap-3">
                 <span className="w-4 shrink-0 text-right text-[12px] text-muted tabular-nums">{i + 1}</span>
-                <Link href={`/admin/urun/${p.id}`} className="relative h-12 w-[38px] shrink-0 overflow-hidden rounded-md bg-paper-2">
+                <Link href={`/admin/urun/${p.id}`} className="relative h-14 w-8 shrink-0 overflow-hidden rounded-md bg-paper-2">
                   {p.image ? (
                     // eslint-disable-next-line @next/next/no-img-element -- küçük önizleme
                     <img src={p.image} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />

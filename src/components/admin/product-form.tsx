@@ -228,7 +228,7 @@ export function ProductForm({ product }: { product?: Product }) {
           type="button"
           onClick={() => fileInput.current?.click()}
           className={cn(
-            "relative mx-auto block aspect-[4/5] w-full max-w-[280px] overflow-hidden rounded-2xl border-2 border-dashed transition-colors",
+            "relative mx-auto block aspect-[9/16] w-full max-w-[230px] overflow-hidden rounded-2xl border-2 border-dashed transition-colors",
             shownImage ? "border-transparent bg-paper-2" : "border-line bg-white hover:border-ink/30",
           )}
         >
@@ -243,7 +243,7 @@ export function ProductForm({ product }: { product?: Product }) {
             <span className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-ink-soft">
               <ImageIcon size={32} />
               <span className="text-[15px] font-medium text-ink">Fotoğraf seç</span>
-              <span className="text-[12.5px]">Instagram’da paylaştığın görselin aynısı</span>
+              <span className="text-[12.5px]">Instagram’da paylaştığın hikâye görselinin aynısı</span>
             </span>
           )}
           {image?.state === "uploading" ? (

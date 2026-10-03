@@ -82,7 +82,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
             const category = getCategory(p.category);
             return (
               <li key={p.id} className="flex gap-3 py-3.5">
-                <Link href={`/admin/urun/${p.id}`} className="relative block h-[85px] w-[68px] shrink-0 overflow-hidden rounded-lg bg-paper-2">
+                <Link href={`/admin/urun/${p.id}`} className="relative block h-[96px] w-[54px] shrink-0 overflow-hidden rounded-lg bg-paper-2">
                   {image ? (
                     // eslint-disable-next-line @next/next/no-img-element -- küçük önizleme, optimizasyon gerekmez
                     <img src={image} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
