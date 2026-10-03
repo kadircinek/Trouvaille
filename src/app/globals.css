@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/*
+ * Vitrin paleti: kırık beyaz zemin, koyu kahve/antrasit metin, tek vurgu rengi.
+ * Vurgu rengini ablanın markasına göre değiştirmek için yalnızca --color-accent
+ * (ve gerekirse --color-accent-soft) değerini güncelleyin. Beyaz yazıyla
+ * okunabilir kalması için koyu bir ton seçin (ör. pudra pembe için #B05C72).
+ */
+@theme {
+  --color-paper: #faf7f2;
+  --color-paper-2: #f1ebe2;
+  --color-ink: #2a2420;
+  --color-ink-soft: #5c524a;
+  --color-muted: #857a70;
+  --color-line: #e5ddd2;
+  --color-accent: #a65a40;
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #f3e3da;
+  --color-danger: #a33b32;
+  --color-success: #3f6b4a;
+
+  --font-serif: var(--font-playfair), ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  background: var(--color-paper);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+/* Yatay kaydırmalı şeritlerde kaydırma çubuğunu gizle. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Alt sabit buton için iPhone ev çubuğu / Instagram tarayıcısı güvenli alanı. */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-in {
+  animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet-in {
+    animation: none;
+  }
+}

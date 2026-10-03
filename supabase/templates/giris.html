@@ -1,0 +1,14 @@
+<!-- Supabase > Authentication > Emails: "Magic Link" ve "Confirm signup" şablonlarına yapıştırın. -->
+<div style="font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 24px; color: #2a2420; background: #faf7f2;">
+  <h2 style="font-family: Georgia, serif; font-weight: 400; margin: 0 0 12px;">Vitrin yönetimine giriş</h2>
+  <p style="margin: 0 0 8px; color: #5c524a;">Giriş kodun:</p>
+  <p style="font-size: 32px; letter-spacing: 6px; font-weight: 700; margin: 0 0 20px;">{{ .Token }}</p>
+  <p style="margin: 0 0 20px; color: #5c524a;">Ya da bu cihazda doğrudan giriş yapmak için:</p>
+  <p style="margin: 0 0 24px;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/admin"
+       style="display: inline-block; background: #a65a40; color: #ffffff; text-decoration: none; padding: 12px 22px; border-radius: 999px; font-weight: 600;">
+      Yönetime giriş yap
+    </a>
+  </p>
+  <p style="font-size: 12px; color: #857a70; margin: 0;">Bu girişi sen istemediysen e-postayı yok sayabilirsin. Kod 1 saat geçerlidir.</p>
+</div>

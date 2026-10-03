@@ -1,0 +1,56 @@
+export type ProductStatus = "draft" | "published" | "archived";
+
+export type Product = {
+  id: string;
+  slug: string;
+  title: string;
+  brand: string | null;
+  store: string;
+  affiliate_url: string;
+  image_url: string | null;
+  image_width: number | null;
+  image_height: number | null;
+  image_blur: string | null;
+  fallback_image_url: string | null;
+  category: string | null;
+  note: string | null;
+  is_gift: boolean;
+  gift_brand: string | null;
+  is_pinned: boolean;
+  sort_key: number;
+  status: ProductStatus;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Ziyaretçiye giden alanlar: affiliate linki yok, tıklama her zaman /go üzerinden. */
+export type PublicProduct = Pick<
+  Product,
+  | "id"
+  | "slug"
+  | "title"
+  | "brand"
+  | "store"
+  | "image_url"
+  | "image_width"
+  | "image_height"
+  | "image_blur"
+  | "fallback_image_url"
+  | "category"
+  | "note"
+  | "is_gift"
+  | "gift_brand"
+  | "is_pinned"
+  | "published_at"
+>;
+
+export const PUBLIC_PRODUCT_COLUMNS =
+  "id,slug,title,brand,store,image_url,image_width,image_height,image_blur,fallback_image_url,category,note,is_gift,gift_brand,is_pinned,published_at";
+
+export type FeedPage = { items: PublicProduct[]; hasMore: boolean };
+
+/** Ürünün ana görseli: ablanın yüklediği, yoksa linkten çekilen. */
+export function primaryImage(p: Pick<Product, "image_url" | "fallback_image_url">): string | null {
+  return p.image_url ?? p.fallback_image_url;
+}

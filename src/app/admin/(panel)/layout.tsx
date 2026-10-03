@@ -1,0 +1,46 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { AdminNav } from "@/components/admin/admin-nav";
+import { ExternalIcon, LogoutIcon } from "@/components/icons";
+import { site } from "@/config/site";
+import { requireAdmin } from "@/lib/auth";
+import { signOut } from "../giris/actions";
+
+export const metadata: Metadata = {
+  title: { default: "Yönetim", template: `%s · Yönetim · ${site.name}` },
+  robots: { index: false, follow: false },
+  manifest: "/yonetim.webmanifest",
+  appleWebApp: { capable: true, title: `${site.name} Yönetim`, statusBarStyle: "default" },
+};
+
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  await requireAdmin();
+  return (
+    <div className="min-h-dvh bg-paper">
+      <header className="sticky top-0 z-20 border-b border-line bg-paper/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+          <Link href="/admin" className="font-serif text-[19px] text-ink">
+            {site.name} <span className="font-sans text-[12px] text-muted">yönetim</span>
+          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/"
+              target="_blank"
+              className="inline-flex h-9 items-center gap-1 rounded-full px-3 text-[13px] text-ink-soft"
+            >
+              Vitrin <ExternalIcon size={14} />
+            </Link>
+            <form action={signOut}>
+              <button type="submit" aria-label="Çıkış yap" className="grid size-9 place-items-center rounded-full text-ink-soft">
+                <LogoutIcon size={18} />
+              </button>
+            </form>
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto max-w-lg px-4 pt-4 pb-28">{children}</main>
+      <AdminNav />
+    </div>
+  );
+}

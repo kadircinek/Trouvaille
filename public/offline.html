@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#faf7f2" />
+    <title>Bağlantı yok</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: #faf7f2;
+        color: #2a2420;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      h1 { font-family: ui-serif, Georgia, serif; font-weight: 400; font-size: 28px; margin: 0 0 8px; }
+      p { color: #5c524a; font-size: 15px; line-height: 1.5; margin: 0 0 24px; }
+      button {
+        border: 0; border-radius: 999px; padding: 12px 22px; font-size: 15px; font-weight: 600;
+        background: #a65a40; color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>İnternet bağlantısı yok</h1>
+      <p>Bağlantın geri geldiğinde vitrin kaldığı yerden açılır.</p>
+      <button type="button" onclick="location.reload()">Tekrar dene</button>
+    </main>
+  </body>
+</html>
