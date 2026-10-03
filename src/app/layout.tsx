@@ -1,19 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Playfair_Display } from "next/font/google";
+import { Bodoni_Moda, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorker } from "@/components/service-worker";
 import { site } from "@/config/site";
 import "./globals.css";
 
 // latin-ext: ğ, ş, ı, İ gibi Türkçe karakterler için şart.
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const display = Bodoni_Moda({
+  variable: "--font-display",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const body = Manrope({
+  variable: "--font-body",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#faf7f2",
+  themeColor: "#fbf8f4",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -50,7 +50,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="tr" className={`${playfair.variable} ${dmSans.variable} antialiased`}>
+    <html lang="tr" className={`${display.variable} ${body.variable} antialiased`}>
       <body className="min-h-dvh">
         {children}
         <ServiceWorker />

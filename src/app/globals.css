@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 /*
- * Vitrin paleti: kırık beyaz zemin, koyu kahve/antrasit metin, tek vurgu rengi.
- * Vurgu rengini ablanın markasına göre değiştirmek için yalnızca --color-accent
- * (ve gerekirse --color-accent-soft) değerini güncelleyin. Beyaz yazıyla
- * okunabilir kalması için koyu bir ton seçin (ör. pudra pembe için #B05C72).
+ * Vitrin paleti: sıcak beyaz zemin, espresso metin, tek vurgu rengi (gül kurusu).
+ * Vurgu rengini ablanın markasına göre değiştirmek için --color-accent (ve
+ * --color-accent-soft) değerini güncelleyin; beyaz yazıyla okunabilir koyu bir ton seçin.
+ * Hikâye halkasının renkleri .story-ring içindedir.
  */
 @theme {
-  --color-paper: #faf7f2;
-  --color-paper-2: #f1ebe2;
-  --color-ink: #2a2420;
-  --color-ink-soft: #5c524a;
-  --color-muted: #857a70;
-  --color-line: #e5ddd2;
-  --color-accent: #a65a40;
+  --color-paper: #fbf8f4;
+  --color-paper-2: #f1ebe5;
+  --color-ink: #1f1a17;
+  --color-ink-soft: #574e48;
+  --color-muted: #8a7f78;
+  --color-line: #e7dfd8;
+  --color-accent: #a84b63;
   --color-accent-ink: #ffffff;
-  --color-accent-soft: #f3e3da;
+  --color-accent-soft: #f6e7eb;
   --color-danger: #a33b32;
   --color-success: #3f6b4a;
 
-  --font-serif: var(--font-playfair), ui-serif, Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Başlıklar: moda dergisi havası; metin: sade ve okunaklı. */
+  --font-serif: var(--font-display), "Didot", "Bodoni 72", Georgia, serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 :root {
@@ -52,6 +53,28 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }
 
+/* Instagram'daki gibi hikâye halkası: görülmemiş yeni hikâyeler renkli. */
+.story-ring {
+  background: conic-gradient(from 200deg, #f3b27a, #e2677f, #a84b63, #c46a8a, #f3b27a);
+}
+
+@keyframes story-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.story-progress {
+  animation: story-progress var(--story-duration, 6s) linear forwards;
+}
+
+.story-paused .story-progress {
+  animation-play-state: paused;
+}
+
 @keyframes sheet-in {
   from {
     transform: translateY(24px);
@@ -70,5 +93,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-sheet-in {
     animation: none;
+  }
+  .story-progress {
+    animation-duration: 12s;
   }
 }

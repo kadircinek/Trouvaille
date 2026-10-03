@@ -30,19 +30,37 @@ export async function getFeedPage(
   return { items: rows.slice(0, limit), hasMore: rows.length > limit };
 }
 
-/** "Hikâyede yeni" şeridi: son 48 saatte yayına alınanlar. */
-export async function getNewProducts(limit = 20): Promise<PublicProduct[]> {
+/** Hikâye halkaları: en son yayına alınanlar (son 48 saattekiler "yeni" sayılır). */
+export async function getStoryProducts(limit = 12): Promise<(PublicProduct & { isNew: boolean })[]> {
   const supabase = createPublicClient();
-  const since = new Date(Date.now() - NEW_WINDOW_HOURS * 3600 * 1000).toISOString();
   const { data, error } = await supabase
     .from("products")
     .select(PUBLIC_PRODUCT_COLUMNS)
     .eq("status", "published")
-    .gte("published_at", since)
-    .order("published_at", { ascending: false })
+    .order("published_at", { ascending: false, nullsFirst: false })
     .limit(limit);
-  if (error) throw new Error(`Yeni ürünler okunamadı: ${error.message}`);
-  return (data ?? []) as PublicProduct[];
+  if (error) throw new Error(`Hikâyeler okunamadı: ${error.message}`);
+  const now = Date.now();
+  return ((data ?? []) as PublicProduct[]).map((p) => ({ ...p, isNew: isNew(p, now) }));
+}
+
+export type VitrinFacets = { total: number; categories: string[]; stores: string[] };
+
+/** Profil sayacı ve filtreler için: yalnızca ürünü olan kategoriler ve mağazalar gösterilir. */
+export async function getVitrinFacets(): Promise<VitrinFacets> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("category, store")
+    .eq("status", "published")
+    .limit(5000);
+  if (error) throw new Error(`Filtreler okunamadı: ${error.message}`);
+  const rows = (data ?? []) as { category: string | null; store: string }[];
+  return {
+    total: rows.length,
+    categories: [...new Set(rows.map((r) => r.category).filter((c): c is string => Boolean(c)))],
+    stores: [...new Set(rows.map((r) => r.store))],
+  };
 }
 
 export const getProductBySlug = cache(async (slug: string): Promise<PublicProduct | null> => {

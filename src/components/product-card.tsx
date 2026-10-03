@@ -1,18 +1,16 @@
-import Link from "next/link";
 import { AdLabel } from "@/components/ad-label";
 import { PinIcon } from "@/components/icons";
 import { ProductImage } from "@/components/product-image";
 import { storeName } from "@/lib/stores";
 import { primaryImage, type PublicProduct } from "@/lib/types";
 
-// 390 px ekranda iki sütun ≈ 180 px; masaüstünde en fazla dört sütun.
-export const GRID_IMAGE_SIZES = "(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw";
+// Instagram profili gibi 3 sütun: 390 px ekranda ≈ 130 px.
+export const GRID_IMAGE_SIZES = "(min-width: 896px) 300px, 34vw";
 
 /**
- * Vitrin kartı. Görseller Instagram hikâyesi oranında (9:16) gösterilir; hikâyedeki
- * yazılar ve ürün kesiti kırpılmaz.
- * - Fotoğrafa dokunmak doğrudan mağazayı açar (/go/:id → tıklama kaydı + 302).
- * - Ürün adına dokunmak detayı açar (not, paylaşım).
+ * Vitrin kartı: Instagram profil ızgarası gibi yalnızca görsel. Hikâye oranında
+ * (9:16), yazılar ve ürün kesiti kırpılmaz. Fotoğrafa dokunmak doğrudan mağazayı
+ * açar (/go/:id → tıklama kaydı + 302). Reklam etiketi her kartın altında.
  */
 export function ProductCard({ product, priority = false }: { product: PublicProduct; priority?: boolean }) {
   const image = primaryImage(product);
@@ -22,7 +20,7 @@ export function ProductCard({ product, priority = false }: { product: PublicProd
         href={`/go/${product.id}`}
         rel="sponsored nofollow"
         aria-label={`${product.title} — ${storeName(product.store)}’da aç`}
-        className="relative block aspect-[9/16] overflow-hidden rounded-xl bg-paper-2 ring-accent/60 outline-none focus-visible:ring-2"
+        className="relative block aspect-[9/16] overflow-hidden bg-paper-2 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
       >
         {image ? (
           <ProductImage
@@ -31,34 +29,32 @@ export function ProductCard({ product, priority = false }: { product: PublicProd
             sizes={GRID_IMAGE_SIZES}
             priority={priority}
             blurDataURL={product.image_url ? product.image_blur : null}
-            className="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="transition duration-300 group-hover:brightness-95"
           />
         ) : null}
         {product.is_pinned ? (
-          <span className="absolute right-2 top-2 grid size-7 place-items-center rounded-full bg-paper/90 text-ink shadow-sm">
-            <PinIcon size={14} />
+          <span className="absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm">
+            <PinIcon size={12} />
             <span className="sr-only">Öne çıkan</span>
           </span>
         ) : null}
       </a>
-      <div className="px-0.5 pt-2 pb-1">
-        <Link href={`/p/${product.slug}`} className="block">
-          {product.brand ? (
-            <p className="truncate text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">{product.brand}</p>
-          ) : null}
-          <p className="line-clamp-2 text-[13px] leading-snug text-ink">{product.title}</p>
-        </Link>
-        <AdLabel store={product.store} isGift={product.is_gift} giftBrand={product.gift_brand} className="mt-1.5" />
-      </div>
+      <AdLabel
+        store={product.store}
+        isGift={product.is_gift}
+        giftBrand={product.gift_brand}
+        size="xs"
+        className="px-1.5 pt-1.5"
+      />
     </div>
   );
 }
 
 export function ProductGrid({ products, priorityCount = 0 }: { products: PublicProduct[]; priorityCount?: number }) {
   return (
-    <ul className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-3 gap-x-0.5 gap-y-3">
       {products.map((p, i) => (
-        <li key={p.id}>
+        <li key={p.id} className="min-w-0">
           <ProductCard product={p} priority={i < priorityCount} />
         </li>
       ))}

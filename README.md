@@ -7,11 +7,12 @@ Instagram hikâyelerinde paylaşılan Trendyol ve Hepsiburada affiliate linkleri
 ## Faz 1 (MVP) — bu sürümde olanlar
 
 **Ziyaretçi tarafı**
-- Instagram hikâyesi oranında (9:16) 2 sütunlu görsel akış, sonsuz kaydırma, sabitlenen ürünler en üstte; hikâyedeki yazılar ve ürün kesiti kırpılmaz
-- **Fotoğrafa dokunmak doğrudan Trendyol/Hepsiburada'yı açar** (tıklama `/go` ile kaydedilir); ürün adına dokunmak detayı açar
-- "Hikâyede yeni" şeridi (son 48 saat, "Yeni" rozeti)
-- Kategori (Giyim, Ayakkabı, Çanta & Aksesuar, Kozmetik & Bakım, Ev) ve mağaza filtresi; filtreli link paylaşılabilir (`/?kategori=giyim`)
-- Ürün detayı: ablanın hikâye görseli tam boy (+ varsa mağazanın ürün fotoğrafı, kaydırmalı), kısa not, altta sabit "Ürüne Git" butonu; fotoğrafa dokunmak da mağazayı açar. Akıştan açıldığında üstte katman olarak açılır; geri dönünce kaydırma konumu korunur
+- Instagram profili gibi üst kısım: halkalı avatar, ürün/kategori sayısı, kısa açıklama, "Instagram'da takip et"
+- **Hikâye halkaları:** en son eklenen 12 ürün; son 48 saattekiler renkli halka + "Yeni" rozeti, görülenler griye döner (yalnızca o cihazda). Dokununca tam ekran hikâye: ilerleme çubukları, sol/sağ dokunuşla geçiş, 6 sn'de otomatik geçiş, basılı tutunca durur, aşağı kaydırınca/geri tuşuyla kapanır; ortaya ya da "Ürüne git"e dokununca mağaza açılır
+- Instagram profil ızgarası gibi 3 sütunlu, hikâye oranında (9:16) akış, sonsuz kaydırma, sabitlenenler en üstte; hikâyedeki yazılar ve ürün kesiti kırpılmaz
+- **Fotoğrafa dokunmak doğrudan Trendyol/Hepsiburada'yı açar** (tıklama `/go` ile kaydedilir)
+- Kategori ve mağaza filtresi yalnızca ürünü olan seçenekleri gösterir; filtreli link paylaşılabilir (`/?kategori=giyim`)
+- Ürün sayfası (`/p/...`, paylaşılan linkler için): hikâye görseli tam boy (+ varsa mağazanın ürün fotoğrafı, kaydırmalı), kısa not, altta sabit "Ürüne Git" butonu; fotoğrafa dokunmak da mağazayı açar
 - Her ürünün kendi adresi (`/p/...`) ve WhatsApp/Instagram önizlemesi (Open Graph)
 - Her kartta ve detayda kapatılamayan **"#Reklam · [Mağaza] ortaklık linki"** etiketi; hediye ürünlerde "@Marka tarafından hediye olarak alındı"; sayfanın üstünde ve altında affiliate bilgi notu
 - Gizlilik ve Aydınlatma Metni (`/gizlilik`)
@@ -157,5 +158,5 @@ supabase/migrations/     şema + RLS + Storage + panel fonksiyonları
 - [ ] Trendyol ve Hepsiburada affiliate program şartları `/go` üzerinden yönlendirmeye izin veriyor mu?
 - [ ] Reklam etiketleri ve Gizlilik/Aydınlatma Metni için kısa bir avukat kontrolü (uygulamadaki metinler hukuki danışmanlık değildir).
 - [ ] Linkten otomatik çekilen mağaza ürün fotoğraflarının kullanım şartları.
-- [ ] Vitrin adı, alan adı, profil fotoğrafı ve vurgu rengi (`src/app/globals.css` → `--color-accent`).
+- [ ] Vitrin adı, alan adı, profil fotoğrafı/logo (`NEXT_PUBLIC_PROFILE_IMAGE`) ve vurgu rengi (`src/app/globals.css` → `--color-accent`, hikâye halkası → `.story-ring`).
 - [ ] Kategoriler ablanın paylaşımlarına uyuyor mu? (`src/lib/categories.ts`)

@@ -40,7 +40,16 @@ function mergeUnique(a: PublicProduct[], b: PublicProduct[]): PublicProduct[] {
  * Vitrin akışı. İlk sayfa sunucuda hazırlanır (hızlı açılış); filtreler ve
  * sonsuz kaydırma /api/urunler üzerinden (CDN önbellekli) yüklenir.
  */
-export function Feed({ initial }: { initial: FeedPage }) {
+export function Feed({
+  initial,
+  categories,
+  stores,
+}: {
+  initial: FeedPage;
+  /** Yalnızca ürünü olan kategoriler ve mağazalar gösterilir. */
+  categories: string[];
+  stores: string[];
+}) {
   const [filter, setFilter] = useState<Filter>(NO_FILTER);
   const [items, setItems] = useState<PublicProduct[]>(initial.items);
   const [hasMore, setHasMore] = useState(initial.hasMore);
@@ -111,12 +120,12 @@ export function Feed({ initial }: { initial: FeedPage }) {
 
   return (
     <section aria-label="Ürünler">
-      <div className="sticky top-0 z-20 -mx-px border-b border-line/70 bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/80">
-        <nav aria-label="Kategoriler" className="no-scrollbar flex gap-2 overflow-x-auto px-4 pt-3 pb-2">
+      <div className="sticky top-0 z-20 border-y border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
+        <nav aria-label="Kategoriler" className="no-scrollbar flex gap-1.5 overflow-x-auto px-4 py-2.5">
           <Chip active={!filter.category} onClick={() => applyFilter({ ...filter, category: null })}>
             Tümü
           </Chip>
-          {CATEGORIES.map((c) => (
+          {CATEGORIES.filter((c) => categories.includes(c.id) || filter.category === c.id).map((c) => (
             <Chip
               key={c.id}
               active={filter.category === c.id}
@@ -126,41 +135,43 @@ export function Feed({ initial }: { initial: FeedPage }) {
             </Chip>
           ))}
         </nav>
-        <div role="group" aria-label="Mağaza" className="flex items-center gap-4 px-4 pb-2.5 text-[12.5px]">
-          <span className="text-muted">Mağaza:</span>
-          {[{ id: null, name: "Hepsi" }, ...STORES].map((s) => {
-            const active = filter.store === s.id;
-            return (
-              <button
-                key={s.id ?? "all"}
-                type="button"
-                aria-pressed={active}
-                onClick={() => applyFilter({ ...filter, store: s.id })}
-                className={cn(
-                  "underline-offset-4 transition-colors",
-                  active ? "font-semibold text-ink underline decoration-accent decoration-2" : "text-ink-soft",
-                )}
-              >
-                {s.name}
-              </button>
-            );
-          })}
-        </div>
+        {stores.length > 1 ? (
+          <div role="group" aria-label="Mağaza" className="flex items-center gap-4 px-4 pb-2.5 text-[12.5px]">
+            <span className="text-muted">Mağaza:</span>
+            {[{ id: null, name: "Hepsi" }, ...STORES.filter((st) => stores.includes(st.id))].map((s) => {
+              const active = filter.store === s.id;
+              return (
+                <button
+                  key={s.id ?? "all"}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => applyFilter({ ...filter, store: s.id })}
+                  className={cn(
+                    "underline-offset-4 transition-colors",
+                    active ? "font-bold text-ink underline decoration-accent decoration-2" : "text-ink-soft",
+                  )}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
 
-      <div className="px-4 pt-4">
-        {items.length > 0 ? <ProductGrid products={items} priorityCount={isFiltered ? 0 : 4} /> : null}
+      <div className="pt-0.5">
+        {items.length > 0 ? <ProductGrid products={items} priorityCount={isFiltered ? 0 : 6} /> : null}
 
         {items.length === 0 && status === "loading" ? <GridSkeleton /> : null}
 
         {items.length === 0 && status === "idle" ? (
-          <p className="py-16 text-center text-sm text-ink-soft">
+          <p className="px-4 py-16 text-center text-sm text-ink-soft">
             {isFiltered ? "Bu seçimde henüz ürün yok." : "Vitrin çok yakında dolacak."}
           </p>
         ) : null}
 
         {status === "error" ? (
-          <div className="py-8 text-center text-sm text-ink-soft">
+          <div className="px-4 py-8 text-center text-sm text-ink-soft">
             Ürünler yüklenemedi.{" "}
             <button
               type="button"
@@ -189,8 +200,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] whitespace-nowrap transition-colors",
-        active ? "border-ink bg-ink text-paper" : "border-line bg-transparent text-ink hover:border-ink/40",
+        "h-8 shrink-0 rounded-full px-3.5 text-[12.5px] font-semibold whitespace-nowrap transition-colors",
+        active ? "bg-ink text-paper" : "bg-paper-2 text-ink hover:bg-line",
       )}
     >
       {children}
@@ -200,12 +211,11 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 function GridSkeleton() {
   return (
-    <ul className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4" aria-hidden="true">
+    <ul className="grid grid-cols-3 gap-x-0.5 gap-y-3" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
         <li key={i}>
-          <div className="aspect-[9/16] animate-pulse rounded-xl bg-paper-2" />
-          <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-paper-2" />
-          <div className="mt-1.5 h-2.5 w-1/2 animate-pulse rounded bg-paper-2" />
+          <div className="aspect-[9/16] animate-pulse bg-paper-2" />
+          <div className="mx-1.5 mt-1.5 h-2.5 w-3/4 animate-pulse rounded bg-paper-2" />
         </li>
       ))}
     </ul>
