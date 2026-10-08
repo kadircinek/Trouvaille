@@ -25,7 +25,7 @@ Instagram hikâyelerinde paylaşılan Trendyol ve Hepsiburada affiliate linkleri
 - `?s=story` ile gelen tıklamalar "hikâye", paylaşılan linkten gelenler "paylaşım" olarak ayrılır
 
 **Admin paneli (`/admin`, telefondan)**
-- Şifresiz giriş: e-postaya gelen 6 haneli kod ya da sihirli link
+- Kullanıcı adı + şifreyle giriş; *Hesabım*'dan şifre değiştirme. Şifre unutulursa e-postaya gelen kod ya da linkle giriş
 - Hızlı ürün ekleme: fotoğraf seç → linki yapıştır → mağaza ve ürün adı otomatik → (kategori, not) → Yayınla
 - Linkten ürün adı/marka/fotoğraf otomatik çekilir; kendi görsel yüklenmezse ürün fotoğrafı kullanılır
 - Düzenle, sırala (yukarı/aşağı), sabitle, arşivle (vitrinde gizlenir, link çalışmaya devam eder), sil
@@ -44,26 +44,19 @@ Faz 2'de (henüz yok): arama, favoriler, hikâye için kısa linkler (`/u/ab12`)
 
 ## 2. Supabase kurulumu
 
-1. **Proje oluştur:** Supabase → *New project*. Bölge olarak **Central EU (Frankfurt)** seç (Vercel tarafında da Frankfurt kullanılıyor, `/go` yönlendirmesi hızlı kalsın diye).
-2. **Şemayı kur:** *SQL Editor* → *New query* → [`supabase/migrations/20261004000000_faz1_vitrin.sql`](supabase/migrations/20261004000000_faz1_vitrin.sql) dosyasının tamamını yapıştır → *Run*.
-   (Supabase CLI kullanıyorsan: `npx supabase link --project-ref <ref>` ve `npx supabase db push`.)
-3. **Admin e-postasını ekle** (SQL Editor'da, kendi adresinle):
-   ```sql
-   insert into public.admins (email) values ('abla@ornek.com');
-   ```
-   Panele yalnızca bu tablodaki adresler girebilir; diğer adreslere e-posta bile gönderilmez.
-4. **Adresler:** *Authentication → URL Configuration*
-   - *Site URL*: sitenin canlı adresi (ör. `https://vitrin.ablanin-adi.com`; alan adı yoksa önce Vercel adresi)
-   - *Redirect URLs*: `https://<canlı-adres>/auth/confirm` ve yerel test için `http://localhost:3000/auth/confirm`
-5. **Giriş e-postası şablonu:** *Authentication → Emails → Templates* bölümünde **Magic Link** ve **Confirm signup** şablonlarının ikisinde de:
-   - *Subject*: `Giriş kodun: {{ .Token }}`
-   - *Body*: [`supabase/templates/giris.html`](supabase/templates/giris.html) içeriği
+En kolay yol, Supabase'i **Vercel üzerinden** bağlamak (5. adım): Vercel projesinde *Storage → Supabase* ile veritabanı oluşturulur, anahtarlar Vercel'e kendiliğinden eklenir ve **tablolar her yayında otomatik kurulur** (`scripts/db-setup.mjs`). Supabase panosuna gerektiğinde Vercel'deki *Storage → (veritabanı) → Open in Supabase* düğmesiyle girilir.
 
-   Böylece e-postada hem 6 haneli kod hem de giriş linki olur. Kod, ana ekrana eklenmiş uygulamada (PWA) giriş yapmayı kolaylaştırır; link hangi tarayıcıda açılırsa orada giriş yapar.
-6. **E-posta gönderimi:** Supabase'in yerleşik e-postası yalnızca proje ekibindeki adreslere ve saatte birkaç e-posta gönderir. İki seçenek:
-   - ablanın adresini Supabase organizasyonuna ekip üyesi olarak davet et, **ya da**
-   - *Authentication → Emails → SMTP Settings* ile kendi SMTP'ni bağla (ör. Resend'in ücretsiz planı).
-7. **Anahtarlar:** *Project Settings → API Keys* → Project URL, `anon`/publishable anahtar ve `service_role`/secret anahtar. Service role anahtarı **gizlidir**; yalnızca Vercel'deki sunucu ortam değişkenine girilir.
+Supabase'i ayrıca kendin açtıysan:
+
+1. **Proje oluştur:** Supabase → *New project*, bölge **Central EU (Frankfurt)**.
+2. **Şema:** Vercel'e `POSTGRES_URL_NON_POOLING` (ya da `SUPABASE_DB_URL`) olarak veritabanı bağlantı adresini eklersen tablolar yayında otomatik kurulur (*Project Settings → Database → Connection string*, "Session pooler"). Eklemezsen *SQL Editor*'da `supabase/migrations/` altındaki dosyaları **tarih sırasıyla** birer kez çalıştır.
+3. **Anahtarlar:** *Project Settings → API Keys* → Project URL, `anon`/publishable anahtar ve `service_role`/secret anahtar. Service role anahtarı **gizlidir**; yalnızca Vercel'deki sunucu ortam değişkenine girilir.
+
+Her iki yolda da (isteğe bağlı, "Şifremi unuttum" e-postası için):
+
+- **Adresler:** *Authentication → URL Configuration* → *Site URL*: sitenin kalıcı adresi; *Redirect URLs*: `https://<kalıcı-adres>/auth/confirm` (yerel test için `http://localhost:3000/auth/confirm`).
+- **E-posta şablonu:** *Authentication → Emails → Templates* → **Magic Link** ve **Confirm signup** için *Subject* `Giriş kodun: {{ .Token }}`, *Body* [`supabase/templates/giris.html`](supabase/templates/giris.html).
+- **E-posta gönderimi:** Supabase'in yerleşik e-postası yalnızca proje ekibindeki adreslere ve saatte birkaç e-posta gönderir; ablanın adresine de gitmesi için *Authentication → Emails → SMTP Settings* ile kendi SMTP'ni bağla (ör. Resend'in ücretsiz planı).
 
 ## 3. Ortam değişkenleri
 
@@ -71,11 +64,15 @@ Faz 2'de (henüz yok): arama, favoriler, hikâye için kısa linkler (`/u/ab12`)
 
 | Değişken | Açıklama |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase proje adresi |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase proje adresi (Vercel–Supabase bağlantısı kendisi ekler) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon / publishable anahtar (herkese açık olabilir, RLS korur) |
 | `SUPABASE_SERVICE_ROLE_KEY` | service role / secret anahtar — **gizli, yalnızca sunucuda** |
+| `POSTGRES_URL_NON_POOLING` | veritabanı bağlantı adresi; tabloların yayında otomatik kurulması için (Vercel–Supabase bağlantısı kendisi ekler) |
+| `ADMIN_USERNAME` | ablanın panel kullanıcı adı (ör. `shopbysac`) |
+| `ADMIN_EMAIL` | ablanın e-postası ("Şifremi unuttum" için) |
+| `ADMIN_PASSWORD` | ilk şifre; hesap açıldıktan sonra silinebilir, var olan hesabın şifresini **değiştirmez** |
 | `IP_HASH_SALT` | tekil ziyaretçi sayımı için gizli tuz (`openssl rand -hex 32`) |
-| `NEXT_PUBLIC_SITE_URL` | sitenin canlı adresi (sonunda `/` olmadan) |
+| `NEXT_PUBLIC_SITE_URL` | sitenin kalıcı adresi (boşsa Vercel'deki kalıcı adres kullanılır) |
 | `NEXT_PUBLIC_SITE_NAME` | vitrinin adı (ablanın adı / kullanıcı adı önerilir) |
 | `NEXT_PUBLIC_SITE_TAGLINE` | adın altındaki kısa cümle |
 | `NEXT_PUBLIC_INSTAGRAM_USERNAME` | Instagram kullanıcı adı (`@` olmadan) |
@@ -112,14 +109,15 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 ## 5. Vercel'e yayınlama
 
 1. Vercel → *Add New… → Project* → bu GitHub reposunu seç → *Import*. Framework (Next.js) ve pnpm otomatik tanınır.
-2. *Environment Variables* bölümüne 3. adımdaki değişkenleri gir (Production ve Preview için).
-3. *Deploy*. Fonksiyonlar `vercel.json` ile Frankfurt (`fra1`) bölgesinde çalışır.
-4. **Alan adı:** *Settings → Domains* → alan adını ekle. Sonra `NEXT_PUBLIC_SITE_URL` değerini yeni adresle güncelle, *Deployments → Redeploy* yap ve Supabase'de *Site URL* / *Redirect URLs* değerlerini de güncelle.
-5. **Analitik:** Vercel projesinde *Analytics → Web Analytics → Enable* (çerezsiz sayfa görüntüleme ölçümü).
-6. Telefonda `https://<adres>/admin` → e-posta ile giriş → Safari'de *Paylaş → Ana Ekrana Ekle* (panel uygulama gibi açılır).
-7. Instagram biyografisine vitrinin adresini koy.
+2. *Storage* sekmesinden **Supabase** veritabanı oluşturup projeye bağla (anahtarlar kendiliğinden eklenir). Ayrıca *Settings → Environment Variables*'a 3. adımdaki diğer değişkenleri gir: `IP_HASH_SALT`, `NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SITE_TAGLINE`, `NEXT_PUBLIC_INSTAGRAM_USERNAME` ve ablanın hesabı için `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
+3. *Deploy*. Yayın sırasında günlükte `[veritabanı] …` satırları tabloların kurulduğunu ve yönetici hesabının açıldığını gösterir. Fonksiyonlar `vercel.json` ile Frankfurt (`fra1`) bölgesinde çalışır.
+4. **Herkese açık adres:** Projenin *Overview → Domains* bölümündeki kalıcı adresi kullan (ör. `trouvaille-….vercel.app`). İçinde rastgele harfler olan yayın adresleri Vercel girişiyle korunur; *Settings → Deployment Protection → Vercel Authentication* kapatılırsa bu sayfa hiç çıkmaz.
+5. Ablan `https://<kalıcı-adres>/admin` adresinden kullanıcı adı ve şifresiyle girer, *Hesabım*'dan şifresini değiştirir. Sonra `ADMIN_PASSWORD` değişkenini Vercel'den silebilirsin.
+6. **Alan adı (isteğe bağlı):** *Settings → Domains* → alan adını ekle; Supabase'de *Site URL*'yi güncelle.
+7. **Analitik:** *Analytics → Web Analytics → Enable* (çerezsiz sayfa görüntüleme ölçümü).
+8. Instagram biyografisine vitrinin adresini koy.
 
-Sonraki her `git push` Vercel'de otomatik yayınlanır.
+Sonraki her `git push` Vercel'de otomatik yayınlanır; yeni veritabanı değişiklikleri de o sırada uygulanır.
 
 ## 6. Günlük kullanım (ablan için)
 

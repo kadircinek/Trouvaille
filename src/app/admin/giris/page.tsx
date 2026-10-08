@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/admin/giri
       <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted">Yönetim</p>
       <h1 className="mt-1 font-serif text-[32px] leading-tight">{site.name}</h1>
       <p className="mt-2 mb-8 text-[14px] text-ink-soft">
-        E-postana gelen kodla ya da linkle giriş yap. Şifre yok.
+        Kullanıcı adın ve şifrenle giriş yap.
       </p>
       <LoginForm initialError={errorKey ? ERRORS[errorKey] : undefined} />
       {errorKey === "yetki" ? (

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminNav } from "@/components/admin/admin-nav";
-import { ExternalIcon, LogoutIcon } from "@/components/icons";
+import { ExternalIcon, LogoutIcon, UserIcon } from "@/components/icons";
 import { site } from "@/config/site";
 import { requireAdmin } from "@/lib/auth";
 import { signOut } from "../giris/actions";
@@ -30,6 +30,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               className="inline-flex h-9 items-center gap-1 rounded-full px-3 text-[13px] text-ink-soft"
             >
               Vitrin <ExternalIcon size={14} />
+            </Link>
+            <Link href="/admin/hesap" aria-label="Hesabım" className="grid size-9 place-items-center rounded-full text-ink-soft">
+              <UserIcon size={18} />
             </Link>
             <form action={signOut}>
               <button type="submit" aria-label="Çıkış yap" className="grid size-9 place-items-center rounded-full text-ink-soft">

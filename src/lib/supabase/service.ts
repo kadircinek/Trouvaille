@@ -8,7 +8,7 @@ import { supabaseUrl } from "./env";
  * Anahtar hiçbir zaman tarayıcıya gönderilmez ("server-only" bunu garanti eder).
  */
 export function createServiceClient() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!key) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY tanımlı değil. .env.example dosyasına bakın.");
   }

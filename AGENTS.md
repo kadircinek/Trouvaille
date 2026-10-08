@@ -16,5 +16,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Her ürün kartında ve detayında `<AdLabel>` (#Reklam etiketi) bulunur; kapatılamaz.
 - Arayüz Türkçe ve mobil öncelikli (390 px); Instagram uygulama içi tarayıcısında çalışmalı.
 - Paket yöneticisi: pnpm. Kontroller: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
-- Veritabanı değişiklikleri `supabase/migrations/` altında SQL migration olarak yazılır; RLS: herkes yalnızca yayındaki ürünleri okur, yalnızca admin yazar, tıklamaları service role yazar.
+- Veritabanı değişiklikleri `supabase/migrations/` altında SQL migration olarak yazılır (yeni dosya, eskisi değiştirilmez); `pnpm build` önce `scripts/db-setup.mjs` ile bekleyenleri uygular; RLS: herkes yalnızca yayındaki ürünleri okur, yalnızca admin yazar, tıklamaları service role yazar.
 - Service role anahtarı yalnızca sunucuda (`src/lib/supabase/service.ts`, `server-only`).
