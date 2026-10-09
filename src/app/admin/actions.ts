@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getAdmin, type AdminSession } from "@/lib/auth";
 import { isCategoryId } from "@/lib/categories";
+import { saveLinkCheck } from "@/lib/data/link-checks";
+import { checkProductLink } from "@/lib/link-health";
 import { parseAffiliateUrl } from "@/lib/links";
 import { inspectProductLink } from "@/lib/product-info";
 import { productSlug } from "@/lib/slug";
 import { PRODUCT_IMAGE_BUCKET, storagePathFromUrl } from "@/lib/storage";
 import { detectStoreFromUrl } from "@/lib/stores";
-import type { ProductStatus } from "@/lib/types";
+import type { LinkStatus, ProductStatus } from "@/lib/types";
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -164,10 +166,17 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
   const result = validate(input);
   if (!result.ok) return result;
 
-  const { data: existing } = await admin.supabase.from("products").select("image_url").eq("id", id).maybeSingle();
+  const { data: existing } = await admin.supabase
+    .from("products")
+    .select("image_url, affiliate_url")
+    .eq("id", id)
+    .maybeSingle();
+  // Link değiştiyse eski kontrol sonucu geçersiz; ertesi kontrolde yeni link çözülür.
+  const linkChanged = existing && existing.affiliate_url !== result.data.affiliate_url;
+  const resetCheck = linkChanged ? { check_url: null, link_status: null, link_checked_at: null, link_check_note: null } : {};
   const { data, error } = await admin.supabase
     .from("products")
-    .update(result.data)
+    .update({ ...result.data, ...resetCheck })
     .eq("id", id)
     .select("id, slug")
     .single();
@@ -225,4 +234,28 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   await deleteStoredImage(admin, data?.image_url ?? null);
   refreshVitrin();
   return { ok: true, data: undefined };
+}
+
+// ---------------------------------------------------------------------------
+// Link sağlık kontrolü (elle)
+// ---------------------------------------------------------------------------
+
+export type LinkCheckResult = { status: LinkStatus; note: string | null; checkedAt: string };
+
+/** Panelden "Şimdi kontrol et": tek ürünün linkini hemen kontrol eder. */
+export async function recheckProductLink(id: string): Promise<ActionResult<LinkCheckResult>> {
+  const admin = await getAdmin();
+  if (!admin) return NOT_ADMIN;
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: "Ürün bulunamadı." };
+  const { data: product } = await admin.supabase
+    .from("products")
+    .select("id, affiliate_url, check_url")
+    .eq("id", id)
+    .maybeSingle();
+  if (!product) return { ok: false, error: "Ürün bulunamadı." };
+
+  const check = await checkProductLink(product);
+  await saveLinkCheck(admin.supabase, id, check);
+  revalidatePath("/admin");
+  return { ok: true, data: { status: check.status, note: check.note, checkedAt: new Date().toISOString() } };
 }

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductRowActions } from "@/components/admin/product-row-actions";
-import { CheckIcon, PinIcon } from "@/components/icons";
+import { StoryLinkButton } from "@/components/admin/story-link-button";
+import { LinkStatusBadge } from "@/components/admin/link-status";
+import { AlertIcon, CheckIcon, PinIcon } from "@/components/icons";
 import { requireAdmin } from "@/lib/auth";
 import { getCategory } from "@/lib/categories";
 import { cn } from "@/lib/cn";
-import { countProductsByStatus, listProducts } from "@/lib/data/admin";
+import { countLinkProblems, countProductsByStatus, listProducts } from "@/lib/data/admin";
+import { shortLinkUrl } from "@/lib/short-links";
 import { storeName } from "@/lib/stores";
 import { primaryImage, type ProductStatus } from "@/lib/types";
 
@@ -30,8 +33,17 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   const notice = typeof params.bildirim === "string" ? NOTICES[params.bildirim] : undefined;
   const noticeSlug = typeof params.urun === "string" ? params.urun : undefined;
 
+  const linkProblemsOnly = status === "published" && params.sorun === "link";
+
   const admin = await requireAdmin();
-  const [products, counts] = await Promise.all([listProducts(admin, status), countProductsByStatus(admin)]);
+  const [products, counts, linkProblems] = await Promise.all([
+    listProducts(admin, status, { linkProblemsOnly }),
+    countProductsByStatus(admin),
+    countLinkProblems(admin),
+  ]);
+  // Yeni yayına alınan ürünün hikâye linki hemen kopyalanabilsin.
+  const noticeProduct =
+    notice && noticeSlug && params.bildirim !== "taslak" ? products.find((p) => p.slug === noticeSlug) : undefined;
 
   return (
     <div>
@@ -46,6 +58,26 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
             </Link>
           ) : null}
         </div>
+      ) : null}
+      {noticeProduct?.status === "published" ? (
+        <div className="-mt-2 mb-4">
+          <StoryLinkButton url={shortLinkUrl(noticeProduct.short_code)} variant="block" />
+        </div>
+      ) : null}
+
+      {linkProblems > 0 && status === "published" ? (
+        <Link
+          href={linkProblemsOnly ? "/admin" : "/admin?sorun=link"}
+          className="mb-4 flex items-center gap-3 rounded-2xl bg-danger/10 px-4 py-3 text-[13.5px] text-danger"
+        >
+          <AlertIcon size={18} className="shrink-0" />
+          <span className="flex-1">
+            <strong>{linkProblems} üründe</strong> link sorunu var (kırık ya da stokta yok). Değiştir ya da arşivle.
+          </span>
+          <span className="shrink-0 font-semibold underline underline-offset-4">
+            {linkProblemsOnly ? "Tümünü göster" : "Göster"}
+          </span>
+        </Link>
       ) : null}
 
       <nav className="mb-4 grid grid-cols-3 rounded-xl bg-paper-2 p-1 text-[13px]">
@@ -102,12 +134,14 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                     {category ? ` · ${category.name}` : ""} ·{" "}
                     <span className="font-semibold text-ink">{p.clicks_30d}</span> tıklama (30 gün)
                   </p>
+                  {p.status === "published" ? <LinkStatusBadge status={p.link_status} note={p.link_check_note} /> : null}
                   <ProductRowActions
                     id={p.id}
                     status={p.status}
                     pinned={p.is_pinned}
                     isFirst={i === 0 || products[i - 1].is_pinned !== p.is_pinned}
                     isLast={i === products.length - 1 || products[i + 1].is_pinned !== p.is_pinned}
+                    storyUrl={shortLinkUrl(p.short_code)}
                   />
                 </div>
               </li>

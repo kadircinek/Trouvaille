@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdLabel } from "@/components/ad-label";
+import { FavoriteButton } from "@/components/favorite-button";
 import { Gallery, type GalleryImage } from "@/components/gallery";
 import { GoButton } from "@/components/go-button";
 import { ProductGrid } from "@/components/product-card";
@@ -46,11 +47,14 @@ export function ProductDetail({ product, related, backButton }: Props) {
             images={galleryImages(product)}
             alt={product.title}
             aspect={galleryAspect(product)}
-            href={`/go/${product.id}`}
+            productId={product.id}
           />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3 pt-[max(env(safe-area-inset-top),0.75rem)] sm:p-7">
             {backButton}
-            <ShareButton path={`/p/${product.slug}`} title={product.title} />
+            <div className="flex gap-2">
+              <FavoriteButton productId={product.id} title={product.title} variant="light" />
+              <ShareButton path={`/p/${product.slug}`} title={product.title} />
+            </div>
           </div>
         </div>
 

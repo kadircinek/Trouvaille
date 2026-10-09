@@ -1,5 +1,8 @@
 export type ProductStatus = "draft" | "published" | "archived";
 
+/** Günlük link kontrolünün sonucu (null: henüz kontrol edilmedi). */
+export type LinkStatus = "ok" | "kirik" | "stokta_yok" | "bilinmiyor";
+
 export type Product = {
   id: string;
   slug: string;
@@ -22,6 +25,12 @@ export type Product = {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Hikâye kısa linki: site.com/u/<short_code> */
+  short_code: string;
+  link_status: LinkStatus | null;
+  link_checked_at: string | null;
+  link_check_note: string | null;
+  check_url: string | null;
 };
 
 /** Ziyaretçiye giden alanlar: affiliate linki yok, tıklama her zaman /go üzerinden. */

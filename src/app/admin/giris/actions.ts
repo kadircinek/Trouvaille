@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { site } from "@/config/site";
 import { parseLoginIdentifier } from "@/lib/admin-users";
+import { loginEmail } from "@/lib/login-email";
+import { mailerConfigured, sendMail } from "@/lib/mailer";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -35,21 +37,8 @@ export async function sendLoginCode(_prev: LoginState, formData: FormData): Prom
 
   // Admin olmayan adrese e-posta gönderilmez; ama bu bilgi de sızdırılmaz.
   if (allowed) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true, emailRedirectTo: `${site.url}/auth/confirm?next=/admin` },
-    });
-    if (error) {
-      console.error("Giriş e-postası gönderilemedi:", error.message);
-      const tooMany = error.status === 429 || /rate|seconds/i.test(error.message);
-      return {
-        step: "email",
-        error: tooMany
-          ? "Çok sık deneme yapıldı. Bir dakika bekleyip tekrar dene."
-          : "E-posta gönderilemedi. Biraz sonra tekrar dene.",
-      };
-    }
+    const problem = mailerConfigured() ? await sendOwnLoginEmail(email) : await sendSupabaseLoginEmail(email);
+    if (problem) return { step: "email", error: problem };
   }
 
   return {
@@ -57,6 +46,62 @@ export async function sendLoginCode(_prev: LoginState, formData: FormData): Prom
     email,
     info: "Bu adres yönetici olarak kayıtlıysa e-postana bir giriş kodu ve link gönderdik.",
   };
+}
+
+const TOO_MANY = "Çok sık deneme yapıldı. Bir dakika bekleyip tekrar dene.";
+const SEND_FAILED = "E-posta gönderilemedi. Biraz sonra tekrar dene.";
+/** E-postadaki link/kod ile girildikten sonra yeni şifre belirlensin. */
+const AFTER_EMAIL_LOGIN = "/admin/hesap?sifre=yeni";
+
+/** Supabase'in kendi e-posta servisiyle (SMTP ayarı yoksa). */
+async function sendSupabaseLoginEmail(email: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${site.url}/auth/confirm?next=${encodeURIComponent(AFTER_EMAIL_LOGIN)}`,
+    },
+  });
+  if (!error) return null;
+  console.error("Giriş e-postası gönderilemedi:", error.message);
+  return error.status === 429 || /rate|seconds/i.test(error.message) ? TOO_MANY : SEND_FAILED;
+}
+
+/**
+ * Uygulamanın SMTP ayarıyla: kodu ve linki Supabase üretir (e-posta göndermeden),
+ * e-postayı biz göndeririz. Aynı adrese dakikada en fazla bir e-posta.
+ */
+async function sendOwnLoginEmail(email: string): Promise<string | null> {
+  const service = createServiceClient();
+  const cutoff = new Date(Date.now() - 60_000).toISOString();
+  const { data: slot, error: slotError } = await service
+    .from("admins")
+    .update({ login_email_sent_at: new Date().toISOString() })
+    .eq("email", email)
+    .or(`login_email_sent_at.is.null,login_email_sent_at.lt.${cutoff}`)
+    .select("email");
+  if (slotError) {
+    console.error("Giriş e-postası sırası alınamadı:", slotError.message);
+    return SEND_FAILED;
+  }
+  if (!slot?.length) return TOO_MANY;
+
+  const { data, error } = await service.auth.admin.generateLink({ type: "magiclink", email });
+  if (error || !data?.properties) {
+    console.error("Giriş linki üretilemedi:", error?.message);
+    return SEND_FAILED;
+  }
+  const link =
+    `${site.url}/auth/confirm?type=magiclink&token_hash=${encodeURIComponent(data.properties.hashed_token)}` +
+    `&next=${encodeURIComponent(AFTER_EMAIL_LOGIN)}`;
+  try {
+    await sendMail({ to: email, ...loginEmail({ siteName: site.name, code: data.properties.email_otp, link }) });
+  } catch (err) {
+    console.error("Giriş e-postası gönderilemedi (SMTP):", err);
+    return SEND_FAILED;
+  }
+  return null;
 }
 
 /** 2. adım: e-postadaki kodu doğrula (ana ekrana eklenmiş uygulamada da çalışır). */
@@ -71,7 +116,7 @@ export async function verifyLoginCode(_prev: LoginState, formData: FormData): Pr
   if (error) {
     return { step: "code", email, error: "Kod hatalı ya da süresi dolmuş. Yeni kod isteyebilirsin." };
   }
-  redirect("/admin");
+  redirect(AFTER_EMAIL_LOGIN);
 }
 
 export type PasswordState = { error?: string; identifier?: string };

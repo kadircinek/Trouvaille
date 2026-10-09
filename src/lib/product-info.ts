@@ -46,7 +46,7 @@ function metaTags(html: string): Map<string, string> {
   return map;
 }
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 
 function findProductNode(node: JsonValue, depth = 0): Record<string, JsonValue> | null {
   if (depth > 6 || node === null || typeof node !== "object") return null;
@@ -84,7 +84,8 @@ function firstString(value: JsonValue | undefined): string | null {
   return null;
 }
 
-function jsonLdProduct(html: string): ProductInfo | null {
+/** Sayfadaki JSON-LD "Product" düğümü (yoksa null). */
+export function jsonLdProductNode(html: string): Record<string, JsonValue> | null {
   const scripts = html.match(/<script\b[^>]*type\s*=\s*["']?application\/ld\+json["']?[^>]*>[\s\S]*?<\/script>/gi) ?? [];
   for (const script of scripts) {
     const body = script.replace(/^<script\b[^>]*>/i, "").replace(/<\/script>$/i, "").trim();
@@ -95,14 +96,19 @@ function jsonLdProduct(html: string): ProductInfo | null {
       continue;
     }
     const product = findProductNode(data);
-    if (!product) continue;
-    return {
-      title: firstString(product.name),
-      brand: firstString(product.brand),
-      imageUrl: firstString(product.image),
-    };
+    if (product) return product;
   }
   return null;
+}
+
+function jsonLdProduct(html: string): ProductInfo | null {
+  const product = jsonLdProductNode(html);
+  if (!product) return null;
+  return {
+    title: firstString(product.name),
+    brand: firstString(product.brand),
+    imageUrl: firstString(product.image),
+  };
 }
 
 /** Mağaza başlıklarındaki "Fiyatı, Yorumları - Trendyol" gibi ekleri temizler. */
@@ -167,13 +173,13 @@ export function guessFromProductUrl(url: string): ProductInfo {
 // Ağ: kısaltılmış linkleri çöz, ürün sayfasını oku. (Yalnızca sunucuda, admin için.)
 // ---------------------------------------------------------------------------
 
-const BROWSER_UA =
+export const BROWSER_UA =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
 const MAX_HOPS = 6;
 const MAX_HTML_BYTES = 2_000_000;
 
-function isForbiddenHost(hostname: string): boolean {
+export function isForbiddenHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal") || host.endsWith(".local")) return true;
   if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
@@ -183,7 +189,7 @@ function isForbiddenHost(hostname: string): boolean {
   return host.includes(":"); // IPv6 literalleri
 }
 
-async function readLimited(res: Response, limit: number): Promise<string> {
+export async function readLimited(res: Response, limit: number): Promise<string> {
   if (!res.body) return "";
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];

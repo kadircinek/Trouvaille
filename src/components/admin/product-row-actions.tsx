@@ -2,13 +2,22 @@
 
 import { useTransition, useState } from "react";
 import { moveProduct, setProductPinned, setProductStatus } from "@/app/admin/actions";
+import { StoryLinkButton } from "@/components/admin/story-link-button";
 import { ArrowDownIcon, ArrowUpIcon, PinIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import type { ProductStatus } from "@/lib/types";
 
-type Props = { id: string; status: ProductStatus; pinned: boolean; isFirst: boolean; isLast: boolean };
+type Props = {
+  id: string;
+  status: ProductStatus;
+  pinned: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+  /** Hikâye kısa linki (yalnızca yayındaki ürünlerde gösterilir). */
+  storyUrl: string;
+};
 
-export function ProductRowActions({ id, status, pinned, isFirst, isLast }: Props) {
+export function ProductRowActions({ id, status, pinned, isFirst, isLast, storyUrl }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +72,7 @@ export function ProductRowActions({ id, status, pinned, isFirst, isLast }: Props
             >
               Arşivle
             </button>
+            <StoryLinkButton url={storyUrl} />
           </>
         ) : (
           <button

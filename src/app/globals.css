@@ -17,6 +17,7 @@
   --color-accent-ink: #ffffff;
   --color-accent-soft: #f6e7eb;
   --color-danger: #a33b32;
+  --color-warning: #8a5a12;
   --color-success: #3f6b4a;
 
   /* Başlıklar: moda dergisi havası; metin: sade ve okunaklı. */
@@ -73,6 +74,27 @@ body {
 
 .story-paused .story-progress {
   animation-play-state: paused;
+}
+
+/* Favori kalbi: eklenince küçük bir "pıt". */
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-heart-pop {
+  animation: heart-pop 320ms cubic-bezier(0.3, 1.5, 0.6, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-heart-pop {
+    animation: none;
+  }
 }
 
 @keyframes sheet-in {

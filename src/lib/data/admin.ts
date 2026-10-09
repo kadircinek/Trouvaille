@@ -4,12 +4,18 @@ import type { Product, ProductStatus } from "@/lib/types";
 
 export type AdminProduct = Product & { clicks_30d: number };
 
-export async function listProducts(admin: AdminSession, status: ProductStatus): Promise<AdminProduct[]> {
+/** Link kontrolünde sorun çıkan durumlar (panelde uyarı gösterilir). */
+export const LINK_PROBLEMS = ["kirik", "stokta_yok"] as const;
+
+export async function listProducts(
+  admin: AdminSession,
+  status: ProductStatus,
+  { linkProblemsOnly = false }: { linkProblemsOnly?: boolean } = {},
+): Promise<AdminProduct[]> {
+  let query = admin.supabase.from("products").select("*").eq("status", status);
+  if (linkProblemsOnly) query = query.in("link_status", [...LINK_PROBLEMS]);
   const [{ data, error }, clicks] = await Promise.all([
-    admin.supabase
-      .from("products")
-      .select("*")
-      .eq("status", status)
+    query
       .order("is_pinned", { ascending: false })
       .order("sort_key", { ascending: false })
       .order("id", { ascending: false })
@@ -29,6 +35,16 @@ export async function countProductsByStatus(admin: AdminSession): Promise<Record
     statuses.map((s) => admin.supabase.from("products").select("id", { count: "exact", head: true }).eq("status", s)),
   );
   return Object.fromEntries(statuses.map((s, i) => [s, results[i].count ?? 0])) as Record<ProductStatus, number>;
+}
+
+/** Yayındaki ürünlerden linki kırık ya da stokta olmayanların sayısı. */
+export async function countLinkProblems(admin: AdminSession): Promise<number> {
+  const { count } = await admin.supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "published")
+    .in("link_status", [...LINK_PROBLEMS]);
+  return count ?? 0;
 }
 
 export async function getProduct(admin: AdminSession, id: string): Promise<Product | null> {

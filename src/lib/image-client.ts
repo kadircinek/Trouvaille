@@ -71,6 +71,36 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
   return { blob, width, height, blur };
 }
 
+const AVATAR_SIZE = 480;
+
+/** Profil fotoğrafı: ortadan kare kırpılır, 480×480 JPEG olur. */
+export async function prepareAvatar(file: File): Promise<Blob> {
+  if (!file.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) {
+    throw new Error("Lütfen bir fotoğraf seç.");
+  }
+  let source: Awaited<ReturnType<typeof decode>>;
+  try {
+    source = await decode(file);
+  } catch {
+    throw new Error("Bu görsel açılamadı. JPEG veya PNG bir fotoğraf dene.");
+  }
+  const side = Math.min(source.width, source.height);
+  const size = Math.min(AVATAR_SIZE, side);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Görsel işlenemedi.");
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, (source.width - side) / 2, (source.height - side) / 2, side, side, 0, 0, size, size);
+  if ("close" in source && typeof source.close === "function") source.close();
+  return toBlob(canvas, "image/jpeg", 0.85);
+}
+
+export function newAvatarPath(): string {
+  return `profil/${crypto.randomUUID()}.jpg`;
+}
+
 export function newImagePath(): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");

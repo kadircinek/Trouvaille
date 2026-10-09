@@ -1,12 +1,20 @@
 import "server-only";
 import { cache } from "react";
+import { searchTerms } from "@/lib/search";
 import { createPublicClient } from "@/lib/supabase/public";
 import { PUBLIC_PRODUCT_COLUMNS, type FeedPage, type PublicProduct } from "@/lib/types";
 
 export const FEED_PAGE_SIZE = 24;
 export const NEW_WINDOW_HOURS = 48;
 
-export type FeedFilter = { category?: string | null; store?: string | null };
+export type FeedFilter = {
+  category?: string | null;
+  store?: string | null;
+  /** Arama metni: her kelime ürün adında ya da markada geçmeli. */
+  q?: string | null;
+  /** Yalnızca bu ürünler (cihazdaki favoriler). */
+  ids?: string[] | null;
+};
 
 /** Vitrin akışı: sabitlenenler üstte, sonra admin sırası (varsayılan: en yeni üstte). */
 export async function getFeedPage(
@@ -18,6 +26,8 @@ export async function getFeedPage(
   let query = supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("status", "published");
   if (filter.category) query = query.eq("category", filter.category);
   if (filter.store) query = query.eq("store", filter.store);
+  for (const term of searchTerms(filter.q)) query = query.ilike("search_text", `%${term}%`);
+  if (filter.ids) query = query.in("id", filter.ids);
 
   const { data, error } = await query
     .order("is_pinned", { ascending: false })

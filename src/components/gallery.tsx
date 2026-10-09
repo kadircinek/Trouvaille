@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ProductImage } from "@/components/product-image";
 import { cn } from "@/lib/cn";
+import { useGoHref } from "@/lib/use-source";
 
 export type GalleryImage = { src: string; blur?: string | null };
 
@@ -14,14 +15,15 @@ export function Gallery({
   images,
   alt,
   aspect,
-  href,
+  productId,
 }: {
   images: GalleryImage[];
   alt: string;
   aspect: number;
-  /** Fotoğrafa dokununca gidilecek adres (/go/:id → mağaza). */
-  href: string;
+  /** Fotoğrafa dokununca /go/:id üzerinden mağaza açılır. */
+  productId: string;
 }) {
+  const href = useGoHref(productId);
   const [index, setIndex] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   if (images.length === 0) return <div className="w-full bg-paper-2" style={{ aspectRatio: aspect }} />;

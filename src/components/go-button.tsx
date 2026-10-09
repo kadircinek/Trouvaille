@@ -1,12 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { ArrowRightIcon } from "@/components/icons";
+import { useGoHref } from "@/lib/use-source";
 
-type Props = { productId: string; storeName: string };
-
-function GoLink({ href, storeName }: { href: string; storeName: string }) {
+/**
+ * "Ürüne Git": her zaman /go/:id üzerinden gider (tıklama kaydı + 302).
+ * Sayfa hikâye (?s=hikaye) ya da paylaşım (?s=paylasim) linkiyle açıldıysa kaynak korunur.
+ */
+export function GoButton({ productId, storeName }: { productId: string; storeName: string }) {
+  const href = useGoHref(productId);
   return (
     <a
       href={href}
@@ -17,24 +19,5 @@ function GoLink({ href, storeName }: { href: string; storeName: string }) {
       <ArrowRightIcon size={18} />
       <span className="sr-only"> ({storeName} sayfası açılır)</span>
     </a>
-  );
-}
-
-function GoLinkWithSource({ productId, storeName }: Props) {
-  const params = useSearchParams();
-  const source = params.get("s");
-  const href = source ? `/go/${productId}?s=${encodeURIComponent(source)}` : `/go/${productId}`;
-  return <GoLink href={href} storeName={storeName} />;
-}
-
-/**
- * "Ürüne Git": her zaman /go/:id üzerinden gider (tıklama kaydı + 302).
- * Sayfa hikâye (?s=story) ya da paylaşım (?s=paylasim) linkiyle açıldıysa kaynak korunur.
- */
-export function GoButton(props: Props) {
-  return (
-    <Suspense fallback={<GoLink href={`/go/${props.productId}`} storeName={props.storeName} />}>
-      <GoLinkWithSource {...props} />
-    </Suspense>
   );
 }

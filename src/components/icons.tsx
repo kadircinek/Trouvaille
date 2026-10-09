@@ -149,3 +149,38 @@ export const UserIcon = (p: IconProps) => (
     <path d="M4 21a8 8 0 0 1 16 0" />
   </Svg>
 );
+
+export const LinkIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1" />
+    <path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" />
+  </Svg>
+);
+
+export const SearchIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.5-3.5" />
+  </Svg>
+);
+
+export const HeartIcon = ({ filled = false, ...p }: IconProps & { filled?: boolean }) => (
+  <Svg {...p} fill={filled ? "currentColor" : "none"}>
+    <path d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z" />
+  </Svg>
+);
+
+export const CloseIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 6l12 12" />
+    <path d="M18 6 6 18" />
+  </Svg>
+);
+
+export const AlertIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3 2.5 20h19L12 3Z" />
+    <path d="M12 10v4" />
+    <path d="M12 17.5v.01" />
+  </Svg>
+);

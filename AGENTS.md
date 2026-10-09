@@ -10,7 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Proje notları (Vitrin / Trouvaille)
 
-- Ürün gereksinimleri `docs/PRD.md` içinde. Fazlar sırayla yapılır; Faz 1 (MVP) tamamlandı, Faz 2: arama, favoriler, hikâye kısa linkleri (`/u/:kod`), link sağlık kontrolü (Vercel Cron), video.
+- Ürün gereksinimleri `docs/PRD.md` içinde. Fazlar sırayla yapılır; Faz 1 (MVP) tamamlandı. Faz 2'den arama, favoriler, hikâye kısa linkleri (`/u/:kod`), link sağlık kontrolü (Vercel Cron, `CRON_SECRET`) yapıldı; video kaldı.
+- Link sağlık kontrolü affiliate linkine her gün istek atmaz: kısa link bir kez çözülür, kontrol `check_url`'e (parametresiz ürün sayfası) yapılır (`src/lib/link-health.ts`).
 - Kapsam dışı: yapay zekâ görsel üretimi / persona, ödeme, ziyaretçi üyeliği.
 - **Affiliate linkleri asla değiştirilmez, kısaltılmaz, parametresi silinmez.** `/go/[id]` linki 302 ile birebir döndürür (`src/lib/links.ts`, testleri `src/lib/__tests__/links.test.ts`).
 - Her ürün kartında ve detayında `<AdLabel>` (#Reklam etiketi) bulunur; kapatılamaz.
