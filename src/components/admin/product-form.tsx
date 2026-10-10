@@ -39,7 +39,7 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
   archived: "Arşiv",
 };
 
-export function ProductForm({ product }: { product?: Product }) {
+export function ProductForm({ product, creatorId }: { product?: Product; creatorId: string }) {
   const router = useRouter();
   const editing = Boolean(product);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -126,7 +126,7 @@ export function ProductForm({ product }: { product?: Product }) {
     try {
       const prepared = await prepareImage(file);
       const supabase = createClient();
-      const path = newImagePath();
+      const path = newImagePath(creatorId);
       const { error: uploadError } = await supabase.storage
         .from(PRODUCT_IMAGE_BUCKET)
         .upload(path, prepared.blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false });

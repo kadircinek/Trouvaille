@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BarList } from "@/components/admin/bar-list";
 import { DailyChart } from "@/components/admin/daily-chart";
-import { requireAdmin } from "@/lib/auth";
+import { requireCreator } from "@/lib/auth";
 import { getCategory } from "@/lib/categories";
 import { cn } from "@/lib/cn";
 import { getDashboard } from "@/lib/data/admin";
@@ -46,8 +46,8 @@ function Card({ title, children, className }: { title: string; children: React.R
 export default async function ClicksPage({ searchParams }: PageProps<"/admin/tiklamalar">) {
   const params = await searchParams;
   const days = PERIODS.find((p) => String(p.days) === params.gun)?.days ?? 30;
-  const admin = await requireAdmin();
-  const { summary, period, daily } = await getDashboard(admin, days);
+  const session = await requireCreator();
+  const { summary, period, daily } = await getDashboard(session, session.creator.id, days);
   const periodLabel = PERIODS.find((p) => p.days === days)!.label.toLocaleLowerCase("tr");
 
   return (

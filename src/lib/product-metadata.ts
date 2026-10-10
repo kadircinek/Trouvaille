@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { site } from "@/config/site";
 import { storeName } from "@/lib/stores";
-import { primaryImage, type PublicProduct } from "@/lib/types";
+import { primaryImage, type PublicCreator, type PublicProduct } from "@/lib/types";
 
 /** Ürün sayfası başlığı + WhatsApp/Instagram önizlemesi (Open Graph). */
-export function productMetadata(product: PublicProduct): Metadata {
+export function productMetadata(product: PublicProduct, creator: PublicCreator): Metadata {
   const image = primaryImage(product);
   const path = `/p/${product.slug}`;
   const disclosure = `#Reklam · ${storeName(product.store)} ortaklık linki`;
-  const description = product.note ? `${product.note} — ${disclosure}` : `${site.name} vitrininde. ${disclosure}`;
+  const description = product.note ? `${product.note} — ${disclosure}` : `${creator.display_name} vitrininde. ${disclosure}`;
   const images = image
     ? [
         {
@@ -28,7 +28,7 @@ export function productMetadata(product: PublicProduct): Metadata {
     openGraph: {
       type: "website",
       url: path,
-      siteName: site.name,
+      siteName: `${creator.display_name} · ${site.name}`,
       locale: site.locale,
       title: product.title,
       description,

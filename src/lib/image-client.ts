@@ -97,12 +97,13 @@ export async function prepareAvatar(file: File): Promise<Blob> {
   return toBlob(canvas, "image/jpeg", 0.85);
 }
 
-export function newAvatarPath(): string {
-  return `profil/${crypto.randomUUID()}.jpg`;
+// Her influencer yalnızca kendi klasörüne (<creator_id>/...) yükleyebilir (Storage RLS).
+export function newAvatarPath(creatorId: string): string {
+  return `${creatorId}/profil/${crypto.randomUUID()}.jpg`;
 }
 
-export function newImagePath(): string {
+export function newImagePath(creatorId: string): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
-  return `${now.getFullYear()}/${month}/${crypto.randomUUID()}.jpg`;
+  return `${creatorId}/${now.getFullYear()}/${month}/${crypto.randomUUID()}.jpg`;
 }

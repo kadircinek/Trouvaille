@@ -8,7 +8,7 @@ export function GET() {
   return Response.json(
     {
       id: "/admin",
-      name: `${site.name} Yönetim`,
+      name: `${site.name} Panel`,
       short_name: "Yönetim",
       lang: "tr",
       start_url: "/admin",

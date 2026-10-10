@@ -8,6 +8,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Vitrin akışının sonraki sayfaları, filtreler, arama ve favoriler (CDN'de 60 sn önbelleklenir). */
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
+  const creatorId = params.get("vitrin");
+  if (!creatorId || !UUID.test(creatorId)) return Response.json({ error: "Vitrin belirtilmedi" }, { status: 400 });
   const category = params.get("kategori");
   const store = params.get("magaza");
   const offset = Math.min(Math.max(Number.parseInt(params.get("offset") ?? "0", 10) || 0, 0), 5000);
@@ -19,7 +21,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const page = await getFeedPage(
-      { category: isCategoryId(category) ? category : null, store: isStoreId(store) ? store : null, q, ids },
+      {
+        creatorId,
+        category: isCategoryId(category) ? category : null,
+        store: isStoreId(store) ? store : null,
+        q,
+        ids,
+      },
       ids ? 0 : offset,
       ids ? Math.max(ids.length, 1) : FEED_PAGE_SIZE,
     );

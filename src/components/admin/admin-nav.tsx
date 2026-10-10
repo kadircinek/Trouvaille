@@ -6,9 +6,9 @@ import { ChartIcon, GridIcon, PlusIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 
 /** Admin alt menüsü (başparmak erişimi). Form sayfalarında kendi kaydet çubuğu olduğu için gizlenir. */
-export function AdminNav() {
+export function AdminNav({ hasVitrin = true }: { hasVitrin?: boolean }) {
   const pathname = usePathname();
-  if (pathname.startsWith("/admin/yeni") || pathname.startsWith("/admin/urun/")) return null;
+  if (!hasVitrin || pathname.startsWith("/admin/yeni") || pathname.startsWith("/admin/urun/")) return null;
 
   const item = (href: string, active: boolean) =>
     cn(

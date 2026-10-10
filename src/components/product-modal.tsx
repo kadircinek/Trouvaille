@@ -33,16 +33,16 @@ export function ProductModal({ children }: { children: ReactNode }) {
   );
 }
 
-export function CloseModalButton() {
+export function CloseModalButton({ label = "Vitrin" }: { label?: string }) {
   const router = useRouter();
   return (
     <button
       type="button"
       onClick={() => router.back()}
-      className="inline-flex h-10 items-center gap-1.5 rounded-full bg-paper/90 pr-3.5 pl-3 text-[13px] font-medium text-ink shadow-sm backdrop-blur"
+      className="inline-flex h-10 max-w-[60vw] items-center gap-1.5 rounded-full bg-paper/90 pr-3.5 pl-3 text-[13px] font-medium text-ink shadow-sm backdrop-blur"
     >
-      <ArrowLeftIcon size={18} />
-      Vitrin
+      <ArrowLeftIcon size={18} className="shrink-0" />
+      <span className="truncate">{label}</span>
     </button>
   );
 }

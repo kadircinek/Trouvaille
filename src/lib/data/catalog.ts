@@ -8,6 +8,8 @@ export const FEED_PAGE_SIZE = 24;
 export const NEW_WINDOW_HOURS = 48;
 
 export type FeedFilter = {
+  /** Vitrin sahibi influencer (zorunlu). */
+  creatorId: string;
   category?: string | null;
   store?: string | null;
   /** Arama metni: her kelime ürün adında ya da markada geçmeli. */
@@ -17,13 +19,13 @@ export type FeedFilter = {
 };
 
 /** Vitrin akışı: sabitlenenler üstte, sonra admin sırası (varsayılan: en yeni üstte). */
-export async function getFeedPage(
-  filter: FeedFilter = {},
-  offset = 0,
-  limit = FEED_PAGE_SIZE,
-): Promise<FeedPage> {
+export async function getFeedPage(filter: FeedFilter, offset = 0, limit = FEED_PAGE_SIZE): Promise<FeedPage> {
   const supabase = createPublicClient();
-  let query = supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("status", "published");
+  let query = supabase
+    .from("products")
+    .select(PUBLIC_PRODUCT_COLUMNS)
+    .eq("status", "published")
+    .eq("creator_id", filter.creatorId);
   if (filter.category) query = query.eq("category", filter.category);
   if (filter.store) query = query.eq("store", filter.store);
   for (const term of searchTerms(filter.q)) query = query.ilike("search_text", `%${term}%`);
@@ -41,12 +43,16 @@ export async function getFeedPage(
 }
 
 /** Hikâye halkaları: en son yayına alınanlar (son 48 saattekiler "yeni" sayılır). */
-export async function getStoryProducts(limit = 12): Promise<(PublicProduct & { isNew: boolean })[]> {
+export async function getStoryProducts(
+  creatorId: string,
+  limit = 12,
+): Promise<(PublicProduct & { isNew: boolean })[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select(PUBLIC_PRODUCT_COLUMNS)
     .eq("status", "published")
+    .eq("creator_id", creatorId)
     .order("published_at", { ascending: false, nullsFirst: false })
     .limit(limit);
   if (error) throw new Error(`Hikâyeler okunamadı: ${error.message}`);
@@ -57,12 +63,13 @@ export async function getStoryProducts(limit = 12): Promise<(PublicProduct & { i
 export type VitrinFacets = { total: number; categories: string[]; stores: string[] };
 
 /** Profil sayacı ve filtreler için: yalnızca ürünü olan kategoriler ve mağazalar gösterilir. */
-export async function getVitrinFacets(): Promise<VitrinFacets> {
+export async function getVitrinFacets(creatorId: string): Promise<VitrinFacets> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select("category, store")
     .eq("status", "published")
+    .eq("creator_id", creatorId)
     .limit(5000);
   if (error) throw new Error(`Filtreler okunamadı: ${error.message}`);
   const rows = (data ?? []) as { category: string | null; store: string }[];
@@ -85,13 +92,14 @@ export const getProductBySlug = cache(async (slug: string): Promise<PublicProduc
   return (data as PublicProduct | null) ?? null;
 });
 
-/** Ürün sayfasının altındaki "Bunlar da ilgini çekebilir" için aynı kategoriden birkaç ürün. */
+/** Ürün sayfasının altındaki "Bunlar da ilgini çekebilir": aynı vitrinden, aynı kategoriden. */
 export async function getRelatedProducts(product: PublicProduct, limit = 6): Promise<PublicProduct[]> {
   const supabase = createPublicClient();
   let query = supabase
     .from("products")
     .select(PUBLIC_PRODUCT_COLUMNS)
     .eq("status", "published")
+    .eq("creator_id", product.creator_id)
     .neq("id", product.id);
   if (product.category) query = query.eq("category", product.category);
   const { data, error } = await query

@@ -15,13 +15,14 @@ export type LoginState =
 
 const emailSchema = z.email().max(254);
 
-async function isAdminEmail(email: string): Promise<boolean> {
-  const { data, error } = await createServiceClient().from("admins").select("email").eq("email", email).maybeSingle();
+/** Bu e-postayla açılmış bir vitrin ya da platform yöneticisi hesabı var mı? */
+async function isPanelEmail(email: string): Promise<boolean> {
+  const { data, error } = await createServiceClient().rpc("panel_account_exists", { p_email: email });
   if (error) throw new Error(error.message);
-  return Boolean(data);
+  return data === true;
 }
 
-/** 1. adım: e-postaya giriş kodu + sihirli link gönder (yalnızca admin listesindekilere). */
+/** 1. adım: e-postaya giriş kodu + sihirli link gönder (yalnızca kayıtlı hesaplara). */
 export async function sendLoginCode(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const parsed = emailSchema.safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
   if (!parsed.success) return { step: "email", error: "Geçerli bir e-posta adresi yaz." };
@@ -29,13 +30,13 @@ export async function sendLoginCode(_prev: LoginState, formData: FormData): Prom
 
   let allowed: boolean;
   try {
-    allowed = await isAdminEmail(email);
+    allowed = await isPanelEmail(email);
   } catch (error) {
-    console.error("Admin listesi okunamadı:", error);
+    console.error("Hesap aranamadı:", error);
     return { step: "email", error: "Şu an giriş yapılamıyor. Biraz sonra tekrar dene." };
   }
 
-  // Admin olmayan adrese e-posta gönderilmez; ama bu bilgi de sızdırılmaz.
+  // Kayıtlı olmayan adrese e-posta gönderilmez; ama bu bilgi de sızdırılmaz.
   if (allowed) {
     const problem = mailerConfigured() ? await sendOwnLoginEmail(email) : await sendSupabaseLoginEmail(email);
     if (problem) return { step: "email", error: problem };
@@ -44,7 +45,7 @@ export async function sendLoginCode(_prev: LoginState, formData: FormData): Prom
   return {
     step: "code",
     email,
-    info: "Bu adres yönetici olarak kayıtlıysa e-postana bir giriş kodu ve link gönderdik.",
+    info: "Bu adresle bir vitrin açılmışsa e-postana bir giriş kodu ve link gönderdik.",
   };
 }
 
@@ -74,18 +75,26 @@ async function sendSupabaseLoginEmail(email: string): Promise<string | null> {
  */
 async function sendOwnLoginEmail(email: string): Promise<string | null> {
   const service = createServiceClient();
-  const cutoff = new Date(Date.now() - 60_000).toISOString();
-  const { data: slot, error: slotError } = await service
-    .from("admins")
-    .update({ login_email_sent_at: new Date().toISOString() })
-    .eq("email", email)
-    .or(`login_email_sent_at.is.null,login_email_sent_at.lt.${cutoff}`)
-    .select("email");
-  if (slotError) {
-    console.error("Giriş e-postası sırası alınamadı:", slotError.message);
-    return SEND_FAILED;
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - 60_000).toISOString();
+  const first = await service.from("login_email_throttle").insert({ email, sent_at: now.toISOString() });
+  if (first.error) {
+    if (first.error.code !== "23505") {
+      console.error("Giriş e-postası sırası alınamadı:", first.error.message);
+      return SEND_FAILED;
+    }
+    const { data: slot, error: slotError } = await service
+      .from("login_email_throttle")
+      .update({ sent_at: now.toISOString() })
+      .eq("email", email)
+      .lt("sent_at", cutoff)
+      .select("email");
+    if (slotError) {
+      console.error("Giriş e-postası sırası alınamadı:", slotError.message);
+      return SEND_FAILED;
+    }
+    if (!slot?.length) return TOO_MANY;
   }
-  if (!slot?.length) return TOO_MANY;
 
   const { data, error } = await service.auth.admin.generateLink({ type: "magiclink", email });
   if (error || !data?.properties) {
@@ -134,17 +143,13 @@ export async function signInWithPassword(_prev: PasswordState, formData: FormDat
   if (identifier.kind === "email") {
     email = identifier.email;
   } else {
-    const { data, error } = await createServiceClient()
-      .from("admins")
-      .select("email")
-      .eq("username", identifier.username)
-      .maybeSingle();
+    const { data, error } = await createServiceClient().rpc("login_email", { p_username: identifier.username });
     if (error) {
-      console.error("Yönetici aranamadı:", error.message);
+      console.error("Kullanıcı aranamadı:", error.message);
       return { error: "Şu an giriş yapılamıyor. Biraz sonra tekrar dene.", identifier: raw };
     }
-    if (!data) return { error: WRONG_CREDENTIALS, identifier: raw };
-    email = data.email;
+    if (typeof data !== "string" || !data) return { error: WRONG_CREDENTIALS, identifier: raw };
+    email = data;
   }
 
   const supabase = await createClient();
@@ -154,13 +159,16 @@ export async function signInWithPassword(_prev: PasswordState, formData: FormDat
     return { error: tooMany ? "Çok fazla deneme yapıldı. Birkaç dakika bekle." : WRONG_CREDENTIALS, identifier: raw };
   }
 
-  // Şifre doğru ama yönetici listesinde değilse oturumu hemen kapat.
-  const { data: isAdmin } = await supabase.rpc("is_admin");
-  if (isAdmin !== true) {
+  // Şifre doğru ama vitrini (ya da yöneticiliği) yoksa / vitrini askıdaysa oturumu kapat.
+  const [{ data: isAdmin }, { data: creatorId }] = await Promise.all([
+    supabase.rpc("is_admin"),
+    supabase.rpc("my_creator_id"),
+  ]);
+  if (isAdmin !== true && !creatorId) {
     await supabase.auth.signOut();
     return { error: WRONG_CREDENTIALS, identifier: raw };
   }
-  redirect("/admin");
+  redirect(creatorId ? "/admin" : "/admin/platform");
 }
 
 export async function signOut() {

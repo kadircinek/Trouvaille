@@ -4,9 +4,10 @@
 insert into public.admins (email) values ('admin@ornek.com');
 
 insert into public.products
-  (slug, title, brand, store, affiliate_url, image_url, image_width, image_height, category, note,
+  (creator_id, slug, title, brand, store, affiliate_url, image_url, image_width, image_height, category, note,
    is_gift, gift_brand, is_pinned, status, published_at, created_at, sort_key)
-values
+select (select id from public.creators where username = 'shopbysac'), v.*
+from (values
   ('saten-midi-elbise-a1b2', 'Saten midi elbise', 'Koton', 'trendyol',
    'https://www.trendyol.com/koton/saten-midi-elbise-p-100001?boutiqueId=61&merchantId=968&utm_source=aff',
    'http://localhost:3000/ornek/elbise.jpg', 1080, 1920, 'giyim',
@@ -46,7 +47,21 @@ values
    now() - interval '20 days', now() - interval '20 days', extract(epoch from now() - interval '20 days')),
   ('taslak-urun-t8u9', 'Taslak ürün', null, 'trendyol',
    'https://ty.gl/ornek-taslak', null, null, null, null, null, false, null, false, 'draft',
-   null, now(), extract(epoch from now()));
+   null, now(), extract(epoch from now()))
+) as v;
+
+-- İkinci örnek influencer (çoklu vitrin denemesi; hesabı yok, yalnızca vitrin).
+insert into public.creators (username, display_name, bio, instagram)
+values ('ornek.influencer', 'Örnek Influencer', 'Kombinlerimdeki parçalar burada.', 'ornek.influencer');
+
+insert into public.products
+  (creator_id, slug, title, brand, store, affiliate_url, image_url, image_width, image_height, category,
+   status, published_at, created_at, sort_key)
+select c.id, 'keten-gomlek-x1y2', 'Keten gömlek', 'Mavi', 'trendyol',
+       'https://www.trendyol.com/mavi/keten-gomlek-p-100005?utm_source=aff',
+       'http://localhost:3000/ornek/hirka.jpg', 1080, 1350, 'giyim',
+       'published', now() - interval '1 hour', now() - interval '1 hour', extract(epoch from now() - interval '1 hour')
+from public.creators c where c.username = 'ornek.influencer';
 
 -- Panelde grafik görünsün diye son 30 güne yayılmış örnek tıklamalar.
 insert into public.clicks (product_id, source, device, app, country, ip_hash, is_bot, created_at)

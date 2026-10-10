@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getAdmin, type AdminSession } from "@/lib/auth";
+import { getCreatorSession, getPanelSession, type PanelSession } from "@/lib/auth";
 import { isCategoryId } from "@/lib/categories";
 import { saveLinkCheck } from "@/lib/data/link-checks";
 import { checkProductLink } from "@/lib/link-health";
@@ -35,7 +35,7 @@ export type LinkInfo = {
 };
 
 export async function inspectLink(rawUrl: string): Promise<ActionResult<LinkInfo>> {
-  if (!(await getAdmin())) return NOT_ADMIN;
+  if (!(await getCreatorSession())) return NOT_ADMIN;
   const url = parseAffiliateUrl(rawUrl);
   if (!url) return { ok: false, error: "Bu bir link gibi görünmüyor. Trendyol veya Hepsiburada linkini yapıştır." };
 
@@ -102,7 +102,7 @@ const productSchema = z.object({
 
 export type ProductInput = z.input<typeof productSchema>;
 
-async function deleteStoredImage(admin: AdminSession, url: string | null) {
+async function deleteStoredImage(admin: PanelSession, url: string | null) {
   const path = storagePathFromUrl(url, process.env.NEXT_PUBLIC_SUPABASE_URL);
   if (!path) return;
   const { error } = await admin.supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([path]);
@@ -135,7 +135,7 @@ function validate(input: ProductInput): ActionResult<z.output<typeof productSche
 }
 
 export async function createProduct(input: ProductInput): Promise<ActionResult<{ id: string; slug: string }>> {
-  const admin = await getAdmin();
+  const admin = await getCreatorSession();
   if (!admin) return NOT_ADMIN;
   const result = validate(input);
   if (!result.ok) return result;
@@ -144,7 +144,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
     const slug = productSlug(result.data.title);
     const { data, error } = await admin.supabase
       .from("products")
-      .insert({ ...result.data, slug })
+      .insert({ ...result.data, slug, creator_id: admin.creator.id })
       .select("id, slug")
       .single();
     if (!error && data) {
@@ -160,7 +160,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
 }
 
 export async function updateProduct(id: string, input: ProductInput): Promise<ActionResult<{ id: string; slug: string }>> {
-  const admin = await getAdmin();
+  const admin = await getPanelSession();
   if (!admin) return NOT_ADMIN;
   if (!z.uuid().safeParse(id).success) return { ok: false, error: "Ürün bulunamadı." };
   const result = validate(input);
@@ -196,7 +196,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
 // ---------------------------------------------------------------------------
 
 export async function setProductStatus(id: string, status: ProductStatus): Promise<ActionResult> {
-  const admin = await getAdmin();
+  const admin = await getPanelSession();
   if (!admin) return NOT_ADMIN;
   if (!["draft", "published", "archived"].includes(status)) return { ok: false, error: "Geçersiz durum." };
   const { error } = await admin.supabase.from("products").update({ status }).eq("id", id);
@@ -209,7 +209,7 @@ export async function setProductStatus(id: string, status: ProductStatus): Promi
 }
 
 export async function setProductPinned(id: string, pinned: boolean): Promise<ActionResult> {
-  const admin = await getAdmin();
+  const admin = await getPanelSession();
   if (!admin) return NOT_ADMIN;
   const { error } = await admin.supabase.from("products").update({ is_pinned: pinned }).eq("id", id);
   if (error) return { ok: false, error: "Sabitleme değiştirilemedi." };
@@ -218,16 +218,16 @@ export async function setProductPinned(id: string, pinned: boolean): Promise<Act
 }
 
 export async function moveProduct(id: string, direction: "up" | "down" | "top"): Promise<ActionResult> {
-  const admin = await getAdmin();
+  const admin = await getPanelSession();
   if (!admin) return NOT_ADMIN;
-  const { error } = await admin.supabase.rpc("admin_move_product", { p_id: id, p_direction: direction });
+  const { error } = await admin.supabase.rpc("panel_move_product", { p_id: id, p_direction: direction });
   if (error) return { ok: false, error: "Sıra değiştirilemedi." };
   refreshVitrin();
   return { ok: true, data: undefined };
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
-  const admin = await getAdmin();
+  const admin = await getPanelSession();
   if (!admin) return NOT_ADMIN;
   const { data, error } = await admin.supabase.from("products").delete().eq("id", id).select("image_url").maybeSingle();
   if (error) return { ok: false, error: "Ürün silinemedi." };
@@ -244,7 +244,7 @@ export type LinkCheckResult = { status: LinkStatus; note: string | null; checked
 
 /** Panelden "Şimdi kontrol et": tek ürünün linkini hemen kontrol eder. */
 export async function recheckProductLink(id: string): Promise<ActionResult<LinkCheckResult>> {
-  const admin = await getAdmin();
+  const admin = await getPanelSession();
   if (!admin) return NOT_ADMIN;
   if (!z.uuid().safeParse(id).success) return { ok: false, error: "Ürün bulunamadı." };
   const { data: product } = await admin.supabase

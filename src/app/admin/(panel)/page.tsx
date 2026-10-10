@@ -4,11 +4,12 @@ import { ProductRowActions } from "@/components/admin/product-row-actions";
 import { StoryLinkButton } from "@/components/admin/story-link-button";
 import { LinkStatusBadge } from "@/components/admin/link-status";
 import { AlertIcon, CheckIcon, PinIcon } from "@/components/icons";
-import { requireAdmin } from "@/lib/auth";
+import { requireCreator } from "@/lib/auth";
 import { getCategory } from "@/lib/categories";
 import { cn } from "@/lib/cn";
 import { countLinkProblems, countProductsByStatus, listProducts } from "@/lib/data/admin";
-import { shortLinkUrl } from "@/lib/short-links";
+import { displayUrl, shortLinkUrl } from "@/lib/short-links";
+import { site } from "@/config/site";
 import { storeName } from "@/lib/stores";
 import { primaryImage, type ProductStatus } from "@/lib/types";
 
@@ -35,18 +36,38 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
 
   const linkProblemsOnly = status === "published" && params.sorun === "link";
 
-  const admin = await requireAdmin();
+  const session = await requireCreator();
+  const { creator } = session;
   const [products, counts, linkProblems] = await Promise.all([
-    listProducts(admin, status, { linkProblemsOnly }),
-    countProductsByStatus(admin),
-    countLinkProblems(admin),
+    listProducts(session, creator.id, status, { linkProblemsOnly }),
+    countProductsByStatus(session, creator.id),
+    countLinkProblems(session, creator.id),
   ]);
+  const welcome = params.hosgeldin === "1";
+  const vitrinUrl = `${site.url}/${creator.username}`;
   // Yeni yayına alınan ürünün hikâye linki hemen kopyalanabilsin.
   const noticeProduct =
     notice && noticeSlug && params.bildirim !== "taslak" ? products.find((p) => p.slug === noticeSlug) : undefined;
 
   return (
     <div>
+      {welcome ? (
+        <div className="mb-4 rounded-2xl bg-accent-soft px-4 py-4">
+          <p className="font-serif text-[20px] text-ink">Vitrinin hazır 🎉</p>
+          <p className="mt-1 text-[13.5px] leading-relaxed text-ink-soft">
+            Adresin <strong className="text-ink">{displayUrl(vitrinUrl)}</strong>. Instagram biyografine ekle; hikâyende
+            paylaştığın her ürünü <strong className="text-ink">+</strong> ile buraya da koy.
+          </p>
+          <div className="mt-3">
+            <StoryLinkButton
+              url={vitrinUrl}
+              variant="block"
+              label="Vitrin adresini kopyala"
+              copiedLabel="Kopyalandı — Instagram biyografine yapıştır"
+            />
+          </div>
+        </div>
+      ) : null}
       {notice ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-success/10 px-4 py-3 text-[13.5px] text-success">
           <span className="flex items-center gap-2">
@@ -142,6 +163,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                     isFirst={i === 0 || products[i - 1].is_pinned !== p.is_pinned}
                     isLast={i === products.length - 1 || products[i + 1].is_pinned !== p.is_pinned}
                     storyUrl={shortLinkUrl(p.short_code)}
+                    share={image ? { image, title: p.title, slug: p.slug } : null}
                   />
                 </div>
               </li>

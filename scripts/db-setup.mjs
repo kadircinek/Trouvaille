@@ -165,6 +165,41 @@ async function ensureAdmin() {
   const { error } = await supabase.from("admins").upsert(row, { onConflict: "email" });
   if (error) throw new Error(`Yönetici listesine eklenemedi: ${error.message}`);
   log(`Yönetici: ${username ?? email}`);
+  if (username) await linkCreator(username, email);
+}
+
+// Yöneticinin aynı adlı vitrini yoksa açılır, hesabı vitrine bağlanır
+// (ilk kurulumda ya da vitrin önce migration ile oluşturulduysa).
+async function linkCreator(username, email) {
+  if (!/^[a-z0-9_][a-z0-9._]{1,28}[a-z0-9_]$/.test(username)) {
+    log(`"${username}" vitrin adresi olamaz (yalnızca harf, rakam, nokta, alt çizgi); vitrin açılmadı.`);
+    return;
+  }
+  const urls = databaseUrls();
+  if (urls.length === 0) return;
+  const client = await connect(urls);
+  if (!client) return;
+  try {
+    const { rows } = await client.query("select id from auth.users where lower(email) = $1 limit 1", [email]);
+    const userId = rows[0]?.id;
+    if (!userId) return;
+    await client.query(
+      `insert into public.creators (username, display_name, user_id)
+       select $1, $1, $2
+        where not exists (select 1 from public.creators where username = $1)
+          and not exists (select 1 from public.creators where user_id = $2)`,
+      [username, userId],
+    );
+    const linked = await client.query(
+      `update public.creators set user_id = $2
+        where username = $1 and user_id is null
+          and not exists (select 1 from public.creators where user_id = $2)`,
+      [username, userId],
+    );
+    if (linked.rowCount) log(`Vitrin /${username} yönetici hesabına bağlandı.`);
+  } finally {
+    await client.end();
+  }
 }
 
 const urls = databaseUrls();

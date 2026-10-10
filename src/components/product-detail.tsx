@@ -6,10 +6,9 @@ import { Gallery, type GalleryImage } from "@/components/gallery";
 import { GoButton } from "@/components/go-button";
 import { ProductGrid } from "@/components/product-card";
 import { ShareButton } from "@/components/share-button";
-import { site } from "@/config/site";
 import { getCategory } from "@/lib/categories";
 import { storeName } from "@/lib/stores";
-import type { PublicProduct } from "@/lib/types";
+import type { PublicCreator, PublicProduct } from "@/lib/types";
 
 /** Detaydaki görsel oranı: yüklenen görselin kendi oranı; hikâye görseli (9:16) tam boy gösterilir. */
 function galleryAspect(product: PublicProduct): number {
@@ -30,12 +29,14 @@ function galleryImages(product: PublicProduct): GalleryImage[] {
 
 type Props = {
   product: PublicProduct;
+  /** Vitrin sahibi: notun imzası ve "diğer ürünler" bağlantısı. */
+  creator: PublicCreator;
   related: PublicProduct[];
   /** Sol üstteki geri / kapat düğmesi (tam sayfa ve katman için farklı). */
   backButton: ReactNode;
 };
 
-export function ProductDetail({ product, related, backButton }: Props) {
+export function ProductDetail({ product, creator, related, backButton }: Props) {
   const category = getCategory(product.category);
   const store = storeName(product.store);
 
@@ -63,7 +64,7 @@ export function ProductDetail({ product, related, backButton }: Props) {
             {product.brand ? <span>{product.brand}</span> : null}
             {product.brand && category ? <span aria-hidden="true">·</span> : null}
             {category ? (
-              <Link href={`/?kategori=${category.id}`} className="underline-offset-4 hover:underline">
+              <Link href={`/${creator.username}?kategori=${category.id}`} className="underline-offset-4 hover:underline">
                 {category.name}
               </Link>
             ) : null}
@@ -75,7 +76,7 @@ export function ProductDetail({ product, related, backButton }: Props) {
               <blockquote className="font-serif text-[17px] leading-relaxed text-ink italic">
                 “{product.note}”
               </blockquote>
-              <figcaption className="mt-1.5 text-[12px] text-ink-soft">— {site.name}</figcaption>
+              <figcaption className="mt-1.5 text-[12px] text-ink-soft">— {creator.display_name}</figcaption>
             </figure>
           ) : null}
         </div>
@@ -83,7 +84,7 @@ export function ProductDetail({ product, related, backButton }: Props) {
         {related.length > 0 ? (
           <section aria-labelledby="benzer" className="mt-10 px-4 pb-6">
             <h2 id="benzer" className="mb-3 px-1 font-serif text-xl text-ink">
-              Bunlar da ilgini çekebilir
+              {creator.display_name} vitrininden
             </h2>
             <ProductGrid products={related} />
           </section>

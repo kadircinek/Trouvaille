@@ -9,7 +9,18 @@ import { displayUrl } from "@/lib/short-links";
  * Hikâyedeki link çıkartması için kısa linki kopyalar. Bu linkten gelenlerin
  * mağaza tıklamaları panelde "Hikâye" olarak ayrı sayılır.
  */
-export function StoryLinkButton({ url, variant = "chip" }: { url: string; variant?: "chip" | "block" }) {
+export function StoryLinkButton({
+  url,
+  variant = "chip",
+  label = "Hikâye linkini kopyala",
+  copiedLabel = "Kopyalandı — hikâyedeki link çıkartmasına yapıştır",
+}: {
+  url: string;
+  variant?: "chip" | "block";
+  /** "block" görünümündeki başlık ve kopyalandıktan sonraki yazı. */
+  label?: string;
+  copiedLabel?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -34,7 +45,7 @@ export function StoryLinkButton({ url, variant = "chip" }: { url: string; varian
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[13.5px] font-semibold text-ink">
-            {copied ? "Kopyalandı — hikâyedeki link çıkartmasına yapıştır" : "Hikâye linkini kopyala"}
+            {copied ? copiedLabel : label}
           </span>
           <span className="block truncate text-[12.5px] text-ink-soft">{displayUrl(url)}</span>
         </span>

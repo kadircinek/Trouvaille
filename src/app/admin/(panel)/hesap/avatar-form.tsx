@@ -7,7 +7,15 @@ import { createClient } from "@/lib/supabase/browser";
 import { saveAvatar } from "./actions";
 
 /** Vitrindeki halkalı profil fotoğrafı: telefondan seçilir, kare kırpılıp yüklenir. */
-export function AvatarForm({ current, initial }: { current: string | null; initial: string }) {
+export function AvatarForm({
+  creatorId,
+  current,
+  initial,
+}: {
+  creatorId: string;
+  current: string | null;
+  initial: string;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(current);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +31,7 @@ export function AvatarForm({ current, initial }: { current: string | null; initi
     try {
       const blob = await prepareAvatar(file);
       const supabase = createClient();
-      const path = newAvatarPath();
+      const path = newAvatarPath(creatorId);
       const { error: uploadError } = await supabase.storage
         .from(PRODUCT_IMAGE_BUCKET)
         .upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: false });

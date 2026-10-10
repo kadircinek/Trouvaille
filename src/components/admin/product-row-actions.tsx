@@ -2,6 +2,7 @@
 
 import { useTransition, useState } from "react";
 import { moveProduct, setProductPinned, setProductStatus } from "@/app/admin/actions";
+import { InstagramShareButton } from "@/components/admin/instagram-share";
 import { StoryLinkButton } from "@/components/admin/story-link-button";
 import { ArrowDownIcon, ArrowUpIcon, PinIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
@@ -15,9 +16,11 @@ type Props = {
   isLast: boolean;
   /** Hikâye kısa linki (yalnızca yayındaki ürünlerde gösterilir). */
   storyUrl: string;
+  /** Instagram'da tekrar paylaşmak için görsel. */
+  share: { image: string; title: string; slug: string } | null;
 };
 
-export function ProductRowActions({ id, status, pinned, isFirst, isLast, storyUrl }: Props) {
+export function ProductRowActions({ id, status, pinned, isFirst, isLast, storyUrl, share }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +76,7 @@ export function ProductRowActions({ id, status, pinned, isFirst, isLast, storyUr
               Arşivle
             </button>
             <StoryLinkButton url={storyUrl} />
+            {share ? <InstagramShareButton {...share} storyUrl={storyUrl} /> : null}
           </>
         ) : (
           <button

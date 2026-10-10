@@ -53,10 +53,13 @@ function mergeUnique(a: PublicProduct[], b: PublicProduct[]): PublicProduct[] {
  * favoriler ve sonsuz kaydırma /api/urunler üzerinden (CDN önbellekli) yüklenir.
  */
 export function Feed({
+  creatorId,
   initial,
   categories,
   stores,
 }: {
+  /** Vitrin sahibi influencer. */
+  creatorId: string;
   initial: FeedPage;
   /** Yalnızca ürünü olan kategoriler ve mağazalar gösterilir. */
   categories: string[];
@@ -77,7 +80,7 @@ export function Feed({
     async (f: Filter, offset: number) => {
       const id = ++requestId.current;
       setStatus("loading");
-      const params = new URLSearchParams({ offset: String(offset) });
+      const params = new URLSearchParams({ vitrin: creatorId, offset: String(offset) });
       if (f.favorites) {
         params.set("ids", favorites.ids.join(","));
       } else {
@@ -103,7 +106,7 @@ export function Feed({
         if (id === requestId.current) setStatus("error");
       }
     },
-    [favorites.ids],
+    [creatorId, favorites.ids],
   );
 
   const applyFilter = useCallback(

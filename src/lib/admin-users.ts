@@ -8,7 +8,7 @@ export type LoginIdentifier = { kind: "email"; email: string } | { kind: "userna
 
 /** Giriş kutusuna yazılanı e-posta ya da kullanıcı adı olarak ayırır (baştaki @ yok sayılır). */
 export function parseLoginIdentifier(input: string): LoginIdentifier | null {
-  const value = input.trim().toLocaleLowerCase("tr").replace(/^@+/, "");
+  const value = input.trim().toLocaleLowerCase("tr").replace(/ı/g, "i").replace(/^@+/, "");
   if (!value) return null;
   if (value.includes("@")) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? { kind: "email", email: value } : null;

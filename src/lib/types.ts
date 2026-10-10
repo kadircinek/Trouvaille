@@ -5,6 +5,7 @@ export type LinkStatus = "ok" | "kirik" | "stokta_yok" | "bilinmiyor";
 
 export type Product = {
   id: string;
+  creator_id: string;
   slug: string;
   title: string;
   brand: string | null;
@@ -37,6 +38,7 @@ export type Product = {
 export type PublicProduct = Pick<
   Product,
   | "id"
+  | "creator_id"
   | "slug"
   | "title"
   | "brand"
@@ -55,7 +57,7 @@ export type PublicProduct = Pick<
 >;
 
 export const PUBLIC_PRODUCT_COLUMNS =
-  "id,slug,title,brand,store,image_url,image_width,image_height,image_blur,fallback_image_url,category,note,is_gift,gift_brand,is_pinned,published_at";
+  "id,creator_id,slug,title,brand,store,image_url,image_width,image_height,image_blur,fallback_image_url,category,note,is_gift,gift_brand,is_pinned,published_at";
 
 export type FeedPage = { items: PublicProduct[]; hasMore: boolean };
 
@@ -63,3 +65,15 @@ export type FeedPage = { items: PublicProduct[]; hasMore: boolean };
 export function primaryImage(p: Pick<Product, "image_url" | "fallback_image_url">): string | null {
   return p.image_url ?? p.fallback_image_url;
 }
+
+/** Vitrin sahibi influencer (herkese açık alanlar). */
+export type PublicCreator = {
+  id: string;
+  username: string;
+  display_name: string;
+  bio: string | null;
+  instagram: string | null;
+  avatar_url: string | null;
+};
+
+export const PUBLIC_CREATOR_COLUMNS = "id,username,display_name,bio,instagram,avatar_url";

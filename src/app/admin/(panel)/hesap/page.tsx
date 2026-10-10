@@ -1,41 +1,59 @@
 import type { Metadata } from "next";
+import { StoryLinkButton } from "@/components/admin/story-link-button";
 import { site } from "@/config/site";
-import { requireAdmin } from "@/lib/auth";
-import { createServiceClient } from "@/lib/supabase/service";
+import { requirePanel } from "@/lib/auth";
 import { signOut } from "../../giris/actions";
 import { AvatarForm } from "./avatar-form";
 import { PasswordForm } from "./password-form";
+import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "Hesabım" };
 
 export default async function AccountPage({ searchParams }: PageProps<"/admin/hesap">) {
   const { sifre } = await searchParams;
-  const admin = await requireAdmin();
-  const [{ data }, { data: settings }] = await Promise.all([
-    createServiceClient().from("admins").select("username").eq("email", admin.email).maybeSingle(),
-    admin.supabase.from("site_settings").select("avatar_url").maybeSingle(),
-  ]);
+  const { creator, email } = await requirePanel();
 
   return (
     <div className="space-y-6">
       <h1 className="font-serif text-[26px]">Hesabım</h1>
 
-      <section className="rounded-2xl border border-line bg-white p-4">
-        <h2 className="mb-3 text-[15px] font-semibold text-ink">Vitrindeki profil fotoğrafı</h2>
-        <AvatarForm
-          current={(settings?.avatar_url as string | null | undefined) ?? null}
-          initial={site.name.charAt(0).toLocaleUpperCase("tr")}
-        />
-      </section>
+      {creator ? (
+        <>
+          <section className="space-y-3">
+            <StoryLinkButton
+              url={`${site.url}/${creator.username}`}
+              variant="block"
+              label="Vitrin adresin"
+              copiedLabel="Kopyalandı — Instagram biyografine yapıştır"
+            />
+          </section>
+
+          <section className="rounded-2xl border border-line bg-white p-4">
+            <h2 className="mb-3 text-[15px] font-semibold text-ink">Profil fotoğrafı</h2>
+            <AvatarForm
+              creatorId={creator.id}
+              current={creator.avatar_url}
+              initial={creator.display_name.charAt(0).toLocaleUpperCase("tr")}
+            />
+          </section>
+
+          <section className="rounded-2xl border border-line bg-white p-4">
+            <h2 className="mb-3 text-[15px] font-semibold text-ink">Vitrin bilgileri</h2>
+            <ProfileForm displayName={creator.display_name} bio={creator.bio} instagram={creator.instagram} />
+          </section>
+        </>
+      ) : null}
 
       <dl className="divide-y divide-line rounded-2xl border border-line bg-white text-[14px]">
-        <div className="flex justify-between gap-4 px-4 py-3">
-          <dt className="text-ink-soft">Kullanıcı adı</dt>
-          <dd className="font-semibold text-ink">{data?.username ?? "—"}</dd>
-        </div>
+        {creator ? (
+          <div className="flex justify-between gap-4 px-4 py-3">
+            <dt className="text-ink-soft">Kullanıcı adı</dt>
+            <dd className="font-semibold text-ink">{creator.username}</dd>
+          </div>
+        ) : null}
         <div className="flex justify-between gap-4 px-4 py-3">
           <dt className="text-ink-soft">E-posta</dt>
-          <dd className="min-w-0 truncate text-ink">{admin.email}</dd>
+          <dd className="min-w-0 truncate text-ink">{email}</dd>
         </div>
       </dl>
 

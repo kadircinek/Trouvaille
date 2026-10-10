@@ -56,7 +56,16 @@ function timeAgo(iso: string | null): string {
 }
 
 /** Instagram'daki gibi hikâye halkaları; dokununca tam ekran hikâye açılır. */
-export function Stories({ items, siteName }: { items: StoryItem[]; siteName: string }) {
+export function Stories({
+  items,
+  siteName,
+  avatarUrl = null,
+}: {
+  items: StoryItem[];
+  /** Vitrin sahibinin adı (hikâye başlığında). */
+  siteName: string;
+  avatarUrl?: string | null;
+}) {
   const seenRaw = useSyncExternalStore(subscribeSeen, readSeen, () => "[]");
   const seen = useMemo(() => {
     try {
@@ -114,6 +123,7 @@ export function Stories({ items, siteName }: { items: StoryItem[]; siteName: str
           items={items}
           start={open}
           siteName={siteName}
+          avatarUrl={avatarUrl}
           onSeen={markSeen}
           onClose={() => setOpen(null)}
         />
@@ -126,6 +136,7 @@ type ViewerProps = {
   items: StoryItem[];
   start: number;
   siteName: string;
+  avatarUrl: string | null;
   onSeen: (id: string) => void;
   onClose: () => void;
 };
@@ -135,7 +146,7 @@ type ViewerProps = {
  * ortaya ya da "Ürüne git"e dokununca mağaza açılır. Basılı tutunca durur,
  * aşağı kaydırınca kapanır. Geri tuşu da kapatır.
  */
-function StoryViewer({ items, start, siteName, onSeen, onClose }: ViewerProps) {
+function StoryViewer({ items, start, siteName, avatarUrl, onSeen, onClose }: ViewerProps) {
   const [index, setIndex] = useState(start);
   const [paused, setPaused] = useState(false);
   const pointerStart = useRef<{ x: number; y: number; t: number } | null>(null);
@@ -217,9 +228,14 @@ function StoryViewer({ items, start, siteName, onSeen, onClose }: ViewerProps) {
             ))}
           </div>
           <div className="mt-2.5 flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-full bg-accent font-serif text-[15px] text-accent-ink">
-              {siteName.charAt(0).toLocaleUpperCase("tr")}
-            </span>
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- 32 px profil fotoğrafı
+              <img src={avatarUrl} alt="" className="size-8 rounded-full object-cover" />
+            ) : (
+              <span className="grid size-8 place-items-center rounded-full bg-accent font-serif text-[15px] text-accent-ink">
+                {siteName.charAt(0).toLocaleUpperCase("tr")}
+              </span>
+            )}
             <span className="text-[13.5px] font-bold">{siteName}</span>
             <span className="text-[12.5px] text-white/70">{timeAgo(item.published_at)}</span>
             <span className="ml-auto flex items-center gap-1">

@@ -24,6 +24,17 @@ const nextConfig: NextConfig = {
       ...supabaseImagePattern(),
     ],
   },
+  // Tek vitrinli ilk sürümün paylaşılmış filtre/arama linkleri (/?kategori=giyim)
+  // artık o vitrinin adresine gider; sorgu parametreleri korunur.
+  async redirects() {
+    const legacy = process.env.LEGACY_VITRIN_USERNAME || "shopbysac";
+    return ["kategori", "magaza", "ara"].map((key) => ({
+      source: "/",
+      has: [{ type: "query" as const, key }],
+      destination: `/${legacy}`,
+      permanent: false,
+    }));
+  },
   async headers() {
     return [
       {

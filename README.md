@@ -1,8 +1,18 @@
-# Trouvaille — Instagram ürün vitrini
+# Trouvaille — influencer ürün vitrinleri
 
-Instagram hikâyelerinde paylaşılan Trendyol ve Hepsiburada affiliate linklerini kalıcı, görsel ve gezilebilir bir vitrine dönüştüren mobil öncelikli web uygulaması (PWA). Ürün gereksinimleri: [`docs/PRD.md`](docs/PRD.md).
+Instagram hikâyelerinde paylaşılan Trendyol ve Hepsiburada affiliate linklerini kalıcı, görsel ve gezilebilir vitrinlere dönüştüren mobil öncelikli web uygulaması (PWA). Her influencer kayıt olup kendi vitrinini açar (`site.com/kullaniciadi`). Ürün gereksinimleri: [`docs/PRD.md`](docs/PRD.md).
 
-> "Trouvaille" çalışma adıdır; ad, açıklama ve Instagram kullanıcı adı ortam değişkenleriyle değiştirilir (aşağıya bakın).
+> Platform adı ve açıklaması ortam değişkenleriyle (`NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SITE_TAGLINE`) değiştirilir; her vitrinin adı, açıklaması, Instagram'ı ve profil fotoğrafı panelden düzenlenir.
+
+## Çoklu influencer — bu sürümde eklenenler
+
+- **Platform ana sayfası (`/`):** vitrinler (son ürünlerinden önizlemeyle) ve "Ücretsiz vitrinini aç" daveti.
+- **Kayıt (`/kayit`):** Instagram kullanıcı adı → vitrin adresi (`site.com/kullaniciadi`), vitrin adı, e-posta, şifre ve #Reklam onayı. Vitrin hemen yayında; kayıt olan doğrudan paneline girer.
+- **Her influencer yalnızca kendi vitrinini yönetir:** ürünler, görseller (Storage'da kendi klasörü), tıklamalar, profil. Bu ayrım veritabanında (RLS) zorunludur; panel kodu atlatılsa da başkasının verisine erişilemez.
+- **Vitrin profili:** *Hesabım*'da ad, kısa açıklama, Instagram kullanıcı adı ve profil fotoğrafı.
+- **Platform yöneticisi** (`admins` tablosu; ablanın hesabı): panelde *Platform* sayfası → tüm vitrinler, ürün sayıları; uygunsuz vitrini **askıya al** (vitrin ve ürünleri herkesten gizlenir, sahibi panele giremez) / yeniden aç.
+- **Ablanın vitrini `/shopbysac`'a taşındı.** Ürün sayfaları (`/p/…`), hikâye linkleri (`/u/…`) ve mağaza linkleri (`/go/…`) aynen çalışır; eski filtreli linkler (`/?kategori=…`) `/shopbysac`'a yönlenir. Instagram biyografisindeki link bir kez `site.com/shopbysac` yapılmalı.
+- **Instagram'da tekrar paylaş:** panelde her ürünün yanında. Görsel telefonun paylaşım menüsüyle Instagram'a (Hikâye) gider, hikâye linki aynı anda panoya kopyalanır; link çıkartmasına yapıştırılıp paylaşılır. Paylaşım menüsü olmayan cihazlarda görsel indirilir. (Instagram, linkli hikâyenin uygulama dışından otomatik paylaşılmasına izin vermez; son dokunuş Instagram'da yapılır.)
 
 ## Faz 1 (MVP) — bu sürümde olanlar
 
@@ -77,15 +87,14 @@ Her iki yolda da (isteğe bağlı, "Şifremi unuttum" e-postası için):
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon / publishable anahtar (herkese açık olabilir, RLS korur) |
 | `SUPABASE_SERVICE_ROLE_KEY` | service role / secret anahtar — **gizli, yalnızca sunucuda** |
 | `POSTGRES_URL_NON_POOLING` | veritabanı bağlantı adresi; tabloların yayında otomatik kurulması için (Vercel–Supabase bağlantısı kendisi ekler) |
-| `ADMIN_USERNAME` | ablanın panel kullanıcı adı (ör. `shopbysac`) |
+| `ADMIN_USERNAME` | platform yöneticisinin (ablanın) kullanıcı adı; aynı adlı vitrini olur (ör. `shopbysac`) |
 | `ADMIN_EMAIL` | ablanın e-postası ("Şifremi unuttum" için) |
 | `ADMIN_PASSWORD` | ilk şifre; hesap açıldıktan sonra silinebilir, var olan hesabın şifresini **değiştirmez** |
 | `IP_HASH_SALT` | tekil ziyaretçi sayımı için gizli tuz (`openssl rand -hex 32`) |
 | `NEXT_PUBLIC_SITE_URL` | sitenin kalıcı adresi (boşsa Vercel'deki kalıcı adres kullanılır) |
-| `NEXT_PUBLIC_SITE_NAME` | vitrinin adı (ablanın adı / kullanıcı adı önerilir) |
-| `NEXT_PUBLIC_SITE_TAGLINE` | adın altındaki kısa cümle |
-| `NEXT_PUBLIC_INSTAGRAM_USERNAME` | Instagram kullanıcı adı (`@` olmadan) |
-| `NEXT_PUBLIC_PROFILE_IMAGE` | yedek profil fotoğrafı (asıl yol: panelde *Hesabım*'dan yükleme); boşsa baş harf gösterilir |
+| `NEXT_PUBLIC_SITE_NAME` | platformun adı (varsayılan `Trouvaille`) |
+| `NEXT_PUBLIC_SITE_TAGLINE` | ana sayfadaki kısa cümle |
+| `LEGACY_VITRIN_USERNAME` | ilk sürümün filtreli linklerinin (`/?kategori=…`) yönleneceği vitrin (varsayılan `shopbysac`) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | gizlilik metnindeki iletişim adresi (isteğe bağlı) |
 | `CRON_SECRET` | günlük link kontrolünü yalnızca Vercel'in tetiklemesi için gizli değer (`openssl rand -hex 24`); yoksa kontrol çalışmaz |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | "Şifremi unuttum" e-postasını kendi hesabından göndermek için (isteğe bağlı). iCloud: `smtp.mail.me.com`, `587`, iCloud adresi + appleid.apple.com'dan *uygulamaya özel şifre*. Gmail: `smtp.gmail.com`, `465`, Google *uygulama şifresi*. `SMTP_FROM` hesapla aynı adres olmalı (ör. `Shopbysac <ad@icloud.com>`) |
@@ -120,17 +129,17 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 ## 5. Vercel'e yayınlama
 
 1. Vercel → *Add New… → Project* → bu GitHub reposunu seç → *Import*. Framework (Next.js) ve pnpm otomatik tanınır.
-2. *Storage* sekmesinden **Supabase** veritabanı oluşturup projeye bağla (anahtarlar kendiliğinden eklenir). Ayrıca *Settings → Environment Variables*'a 3. adımdaki diğer değişkenleri gir: `IP_HASH_SALT`, `NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SITE_TAGLINE`, `NEXT_PUBLIC_INSTAGRAM_USERNAME` ve ablanın hesabı için `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
+2. *Storage* sekmesinden **Supabase** veritabanı oluşturup projeye bağla (anahtarlar kendiliğinden eklenir). Ayrıca *Settings → Environment Variables*'a 3. adımdaki diğer değişkenleri gir: `IP_HASH_SALT`, `CRON_SECRET`, isteğe bağlı `NEXT_PUBLIC_SITE_NAME` / `NEXT_PUBLIC_SITE_TAGLINE` ve platform yöneticisinin hesabı için `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
 3. *Deploy*. Yayın sırasında günlükte `[veritabanı] …` satırları tabloların kurulduğunu ve yönetici hesabının açıldığını gösterir. Fonksiyonlar `vercel.json` ile Frankfurt (`fra1`) bölgesinde çalışır.
 4. **Herkese açık adres:** Projenin *Overview → Domains* bölümündeki kalıcı adresi kullan (ör. `trouvaille-….vercel.app`). İçinde rastgele harfler olan yayın adresleri Vercel girişiyle korunur; *Settings → Deployment Protection → Vercel Authentication* kapatılırsa bu sayfa hiç çıkmaz.
-5. Ablan `https://<kalıcı-adres>/admin` adresinden kullanıcı adı ve şifresiyle girer, *Hesabım*'dan şifresini değiştirir. Sonra `ADMIN_PASSWORD` değişkenini Vercel'den silebilirsin.
+5. Ablan `https://<kalıcı-adres>/admin` adresinden kullanıcı adı ve şifresiyle girer, *Hesabım*'dan şifresini değiştirir. Sonra `ADMIN_PASSWORD` değişkenini Vercel'den silebilirsin. Diğer influencerlar `https://<kalıcı-adres>/kayit` adresinden kendi vitrinlerini açar.
 6. **Alan adı (isteğe bağlı):** *Settings → Domains* → alan adını ekle; Supabase'de *Site URL*'yi güncelle.
 7. **Analitik:** *Analytics → Web Analytics → Enable* (çerezsiz sayfa görüntüleme ölçümü).
 8. Instagram biyografisine vitrinin adresini koy.
 
 Sonraki her `git push` Vercel'de otomatik yayınlanır; yeni veritabanı değişiklikleri de o sırada uygulanır.
 
-## 6. Günlük kullanım (ablan için)
+## 6. Günlük kullanım (influencerlar için)
 
 1. Hikâyeyi paylaşırken panelde **+**'ya dokun.
 2. **Fotoğraf seç** — hikâyede paylaştığın görselin aynısı (yazıları ve ürün kesitiyle birlikte; vitrinde hikâye oranında görünür).
@@ -143,12 +152,15 @@ Sonraki her `git push` Vercel'de otomatik yayınlanır; yeni veritabanı değiş
 - **Tıklamalar:** hangi ürünün ne kadar tıklandığını, hikâye bittikten sonra gelen tıklamaların payını gösterir.
 - **Hikâye linki:** ürünün yanındaki *Hikâye linki*'ne dokun, hikâyede link çıkartmasına yapıştır. Bu linkten gelen tıklamalar *Tıklamalar*'da "Hikâye" olarak görünür.
 - **Link uyarısı:** panelin üstünde kırmızı uyarı çıkarsa ürünün linki kırılmış ya da ürün tükenmiştir; linki değiştir ya da ürünü arşivle.
+- **Instagram'da tekrar paylaş:** ürünün yanındaki düğme → *Paylaş* → Instagram → Hikâye; link çıkartmasına panodaki linki yapıştır.
+- **Platform (yalnızca yönetici):** üst menüdeki *Platform* → vitrinler; uygunsuz bir vitrini *Askıya al*.
 
 ## 7. Teknik notlar
 
 ```
 src/
-  app/(vitrin)/          vitrin: ana sayfa, ürün sayfası (+ @modal katmanı), gizlilik
+  app/(vitrin)/          platform ana sayfası, /[kullanici] vitrinleri, ürün sayfası (+ @modal katmanı), gizlilik
+  app/kayit/             influencer kaydı
   app/go/[id]/           tıklama kaydı + 302 yönlendirme
   app/u/[kod]/           hikâye kısa linki → ürün sayfası (?s=hikaye)
   app/api/urunler/       akışın sonraki sayfaları / filtreler / arama / favoriler (CDN önbellekli)
@@ -162,7 +174,7 @@ supabase/migrations/     şema + RLS + Storage + panel fonksiyonları
 
 - Yığın: Next.js 16 (App Router), TypeScript, Tailwind CSS 4, Supabase (Postgres + Storage + Auth), Vercel.
 - **Affiliate linkleri hiçbir zaman değiştirilmez:** yalnızca baş/son boşluklar atılır; `/go` yanıtındaki `Location` başlığı kayıtlı linkin birebir aynısıdır (testler: `src/lib/__tests__/links.test.ts`).
-- **Güvenlik (RLS):** herkes yalnızca yayındaki ürünleri okur; ürün ekleme/düzenleme ve görsel yükleme yalnızca `admins` tablosundaki e-postalara açıktır; tıklamaları yalnızca sunucu (service role) yazar, yalnızca admin okur.
+- **Güvenlik (RLS):** herkes yalnızca aktif vitrinlerin yayındaki ürünlerini okur; her influencer yalnızca kendi ürünlerini ekler/düzenler, kendi klasörüne görsel yükler ve kendi tıklamalarını görür (`my_creator_id()`); platform yöneticisi (`admins`, `is_admin()`) hepsini görür ve vitrin askıya alabilir; tıklamaları yalnızca sunucu (service role) yazar. Kayıt yalnızca sunucudan (service role) yapılır.
 - **Hız:** vitrin sayfaları statik üretilir (60 sn'de bir ve her admin değişikliğinde anında tazelenir); görseller tarayıcıda küçültülüp yüklenir, ziyaretçiye AVIF/WebP olarak sunulur.
 - Fiyat gösterilmiyor (PRD'de açık soru; fiyatlar sık değiştiği için).
 
@@ -172,4 +184,6 @@ supabase/migrations/     şema + RLS + Storage + panel fonksiyonları
 - [ ] Reklam etiketleri ve Gizlilik/Aydınlatma Metni için kısa bir avukat kontrolü (uygulamadaki metinler hukuki danışmanlık değildir).
 - [ ] Linkten otomatik çekilen mağaza ürün fotoğraflarının kullanım şartları.
 - [ ] Vitrin adı, alan adı, profil fotoğrafı (panel → *Hesabım*) ve vurgu rengi (`src/app/globals.css` → `--color-accent`, hikâye halkası → `.story-ring`).
-- [ ] Kategoriler ablanın paylaşımlarına uyuyor mu? (`src/lib/categories.ts`)
+- [ ] Kategoriler paylaşımlara uyuyor mu? (`src/lib/categories.ts`)
+- [ ] Vercel'in ücretsiz (Hobby) planı yalnızca kişisel, ticari olmayan kullanım içindir; birden fazla influencer'ın gelir elde ettiği bir platform için Pro plana geçilmesi gerekebilir.
+- [ ] Kayıtta e-posta doğrulanmıyor (Supabase'in hazır e-postası yalnızca ekip adreslerine gider). `SMTP_*` ayarlandıktan sonra e-posta doğrulaması eklenebilir; o zamana kadar sahte/başkası adına açılan vitrinler *Platform* sayfasından askıya alınır.
