@@ -20,4 +20,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Kapsam dışı olan "ziyaretçi üyeliği"dir; influencer (vitrin sahibi) kaydı vardır (`/kayit`).
 - Paket yöneticisi: pnpm. Kontroller: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
 - Veritabanı değişiklikleri `supabase/migrations/` altında SQL migration olarak yazılır (yeni dosya, eskisi değiştirilmez); `pnpm build` önce `scripts/db-setup.mjs` ile bekleyenleri uygular; RLS: herkes yalnızca yayındaki ürünleri okur, yalnızca admin yazar, tıklamaları service role yazar.
+- Fonksiyon bölgesi (`vercel.json` → `regions`) Supabase bölgesiyle aynı olmalı (şu an `us-east-1` → `iad1`); farklı kıtada her sorgu ~250 ms ekler. Sayfalarda sorguları zincirleme değil paralel at.
 - Service role anahtarı yalnızca sunucuda (`src/lib/supabase/service.ts`, `server-only`).

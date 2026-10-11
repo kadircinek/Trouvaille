@@ -30,10 +30,11 @@ export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Prom
 
 export default async function ProductPage({ params }: PageProps<"/p/[slug]">) {
   const { slug } = await params;
-  const found = await load(slug);
-  if (!found) notFound();
-  const { product, creator } = found;
-  const related = await getRelatedProducts(product);
+  const product = await getProductBySlug(slug);
+  if (!product) notFound();
+  // Vitrin sahibi ve benzer ürünler birbirini beklemez.
+  const [creator, related] = await Promise.all([getCreatorById(product.creator_id), getRelatedProducts(product)]);
+  if (!creator) notFound();
 
   return (
     <>

@@ -28,17 +28,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductModalPage({ params }: Props) {
   const { slug } = await params;
-  const found = await load(slug);
-  if (!found) notFound();
-  const related = await getRelatedProducts(found.product);
+  const product = await getProductBySlug(slug);
+  if (!product) notFound();
+  // Vitrin sahibi ve benzer ürünler birbirini beklemez.
+  const [creator, related] = await Promise.all([getCreatorById(product.creator_id), getRelatedProducts(product)]);
+  if (!creator) notFound();
 
   return (
     <ProductModal key={slug}>
       <ProductDetail
-        product={found.product}
-        creator={found.creator}
+        product={product}
+        creator={creator}
         related={related}
-        backButton={<CloseModalButton label={found.creator.display_name} />}
+        backButton={<CloseModalButton label={creator.display_name} />}
       />
     </ProductModal>
   );
